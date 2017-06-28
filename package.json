@@ -5,9 +5,10 @@
   "description": "an Application to Track Your Buy + Sell of CryptoCurrencies and The Profit",
   "dependencies": {},
   "devDependencies": {
-    "electron": "^1.6.10",
     "chai": "^4.0.2",
     "chai-as-promised": "^7.0.0",
+    "chai-jquery": "^2.0.0",
+    "electron": "^1.6.10",
     "mocha": "^3.4.2",
     "spectron": "^3.6.4"
   },
