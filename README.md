@@ -1,6 +1,6 @@
 # Crypto Profit Tracker
 
-Wrote this project because can't find a way to keep tracks of CryptoCoins that I bought at certain trade price in relative to the price of the coin being bought then keep tracks of my gains comparing to the current trade price. API is expected to be taken from [coincap.io](http://coincap.io/).
+Consolidate the data taken from Bittrex account through API Key, show current portfolio with the margin (gain / loss percentage).
 
 ## Mockup
 
@@ -8,18 +8,10 @@ Wrote this project because can't find a way to keep tracks of CryptoCoins that I
 
 Created using [creately.com](https://creately.com/)
 
-## What are the "Result" column on Mockup?
-
-The increase of value in the original currency when you convert it back. For example, in the first row, I trade 2 BTC to 10 ETC, then if I trade my 10 ETC **now** I will get 5 BTC. So the result shall be: 5 / 2 * 100% = 250%
-
 ## TODO Checklist
 
-[ ] Add certain coin manually.
+[ ] Connect and get all transactions from Bittrex through the API.
 
-[ ] Input a Buy / Sell Transactions: Date, From, Value, Result.
+[ ] Design a database structure to keep the portfolio and the last transaction sync'd.
 
-[ ] Display all CryptoCurrency assets.
-
-[ ] Display all Transactions.
-
-[ ] Query Transactions from certain Date ranges.
+[ ] Consolidate the transactions data, and display all assets.

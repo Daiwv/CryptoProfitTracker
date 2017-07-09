@@ -3,7 +3,9 @@
   "version": "1.0.0",
   "main": "main.js",
   "description": "an Application to Track Your Buy + Sell of CryptoCurrencies and The Profit",
-  "dependencies": {},
+  "dependencies": {
+    "nedb": "^1.8.0"
+  },
   "devDependencies": {
     "chai": "^4.0.2",
     "chai-as-promised": "^7.0.0",
