@@ -1,15 +1,15 @@
-const {app, remote, BrowserWindow} = require('electron');
+const {app, BrowserWindow} = require('electron');
 const path = require('path');
-
 const DBManager = require( path.resolve(__dirname, './js/DBManager.js') );
 
-const dbm = new DBManager();
+const appDataPath = app.getPath('userData');
+const portfolioDBPath = appDataPath + '\\portfolio';
+const metadataDBPath = appDataPath + '\\metadata';
+const dbm = new DBManager( portfolioDBPath, metadataDBPath );
 
 let mainWindow;
 
 app.on('ready', () => {
-
-    dbm.initDB();
 
     mainWindow = new BrowserWindow({
         height: 600,

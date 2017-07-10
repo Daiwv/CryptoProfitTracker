@@ -2,7 +2,7 @@
   "name": "cryptoprofittracker",
   "version": "1.0.0",
   "main": "main.js",
-  "description": "an Application to Track Your Buy + Sell of CryptoCurrencies and The Profit",
+  "description": "an Application to track your CyrptoCurrency Profits.",
   "dependencies": {
     "nedb": "^1.8.0"
   },
@@ -10,12 +10,15 @@
     "chai": "^4.0.2",
     "chai-as-promised": "^7.0.0",
     "chai-jquery": "^2.0.0",
-    "electron": "^1.6.10",
+    "electron": "^1.6.11",
+    "electron-mocha": "^4.0.0",
     "mocha": "^3.4.2",
+    "sinon": "^2.3.6",
     "spectron": "^3.6.4"
   },
   "scripts": {
-    "test": "mocha"
+    "test": "electron-mocha",
+    "unit-test": "electron-mocha test/database.js"
   },
   "author": "whitesn",
   "license": "ISC"

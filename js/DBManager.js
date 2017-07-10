@@ -2,37 +2,45 @@ const {app} = require('electron');
 const Datastore = require('nedb');
 const fs = require('fs');
 
-const appDataPath = app.getPath('userData');
-const coinDBPath = appDataPath + '\\coins';
-const transactionDBPath = appDataPath + '\\transactions';
-
 class DBManager {
 
-    constructor() {
-        this.coinDB = 0;
-        this.transactionDB = 0;
+    constructor( portfolioDBPath, metadataDBPath ) {
+        this.portfolioDB = new Datastore({filename: portfolioDBPath, autoload: true});
+
+        
+        this.metadataDB = new Datastore({filename: metadataDBPath, autoload: true});
     }
 
     /*
-     * initDB()
-     *
-     * Initialise the Databases with some required rows if
-     * it does not exists yet. Do nothing if DB already
-     * initialized.
+     * Get the amount of coin of certain name inside the portfolio
+     * @param {String} coinName - The name of coin, e.g.: 'BTC', 'ETH', 'ANS'
+     * @param {requestCallback} fn - The callback function to return the amount
      */
-    initDB() {
-        this.coinDB = new Datastore({filename: coinDBPath, autoload: true});
-        this.transactionDB = new Datastore({filename: transactionDBPath, autoload: true});
+    getCoinValue( coinName, fn ) {
+        this.portfolioDB.find({ 'coin': coinName }, function(err, docs) {
+            var amt = -1;
 
-        // Insert Sample Coin Data if Database is yet to be initialized
-        var self = this.coinDB;
-
-        this.coinDB.count({}, function (err, count) {
-            if( count == 0 ) {
-                self.insert({ coin: 'BTC', value: 0 });
-                self.insert({ coin: 'ANS', value: 0 });
-                self.insert({ coin: 'ETC', value: 0 });
+            if( docs.length == 1 ) {
+                amt = docs[0].amount;
             }
+
+            fn(amt);
+        });
+    }
+
+    /*
+     * Get all the coins list in the portfolio
+     * @param {requestCallback} fn - The callback function to return the coins list
+     */
+    getCoins( fn ) {
+        this.portfolioDB.find({}, function(err, docs) {
+            var coins = [];
+
+            docs.forEach(function(element) {
+                coins.push(element.coin);
+            });
+
+            fn( coins );
         });
     }
 };

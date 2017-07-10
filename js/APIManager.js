@@ -1,0 +1,5 @@
+class APIManager {
+    constructor() {
+
+    }
+}
