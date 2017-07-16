@@ -1,0 +1,29 @@
+<form class="cpt-auth pure-form pure-form-stacked">
+    <fieldset>
+        <legend>Bittrex Authentication</legend>
+
+        <label for="api_key">API Key</label>
+        <input id="apikey" type="text" placeholder="api_key">
+
+        <label for="secret_key">Secret Key</label>
+        <input id="secret_key" type="text" placeholder="secret_key">
+
+        <label class="cpt-auth-submit pure-button pure-button-primary">Submit</label>
+    </fieldset>
+</form>
+
+<script>
+const {ipcRenderer} = require('electron');
+
+$(".cpt-auth-submit").click(function() {
+    var api_key = $("#apikey").val();
+    var secret_key = $("#secret_key").val();
+
+    const bittrex_auth = {
+        'api_key': api_key,
+        'secret_key': secret_key
+    };
+
+    ipcRenderer.send('bittrex_auth_add', bittrex_auth);
+});
+</script>

@@ -5,23 +5,39 @@
     <link rel="stylesheet" href="assets/font-awesome.min.css">
     <link rel="stylesheet" href="assets/pure-min.css">
     <link rel="stylesheet" href="assets/style.css">
+    <!-- Insert this line above script imports  -->
+    <script>if (typeof module === 'object') {window.module = module; module = undefined;}</script>
+
+    <!-- normal script imports etc  -->
+    <script src="assets/jquery.min.js"></script>
+
+    <!-- Insert this line after script imports -->
+    <script>if (window.module) module = window.module;</script>
 </head>
 <body>
     <div class="pure-g cpt-container">
-        <div class="pure-u-1-5">
-            <div class="cpt-coins">
-                <div class="cpt-coins-title">
-                    <h1>My Coins</h1>
-                    <i class="fa fa-plus fa-2x cpt-coins-add" aria-hidden="true" onClick=""></i>
-                </div>
-            </div>
+        <div class="pure-u-4-24 cpt-sidebar">
+            <ul>
+                <li id="homeBtn"><i class="fa fa-home fa-3x" aria-hidden="true"></i></li>
+                <li id="settingBtn"><i class="fa fa-cog fa-3x" aria-hidden="true"></i></li>
+            </ul>
         </div>
-        <div class="pure-u-4-5">
-            <div class="cpt-transactions">
-                <h1>Transactions</h1>
-                <i class="fa fa-plus fa-2x" aria-hidden="true" onClick=""></i>
-            </div>
+        <div class="pure-u-20-24" id="cpt-mainwindow">
         </div>
     </div>
+
+    <script>
+    const ipc = require('electron').ipcRenderer;
+
+    $("#homeBtn").click(function() {
+        $("#cpt-mainwindow").load("home.html");
+    });
+
+    $("#settingBtn").click(function() {
+        $("#cpt-mainwindow").load("setting.html");
+    });
+
+    $("#cpt-mainwindow").load("home.html");
+    </script>
 </body>
 </html>

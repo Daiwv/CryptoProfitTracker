@@ -9,10 +9,10 @@ var {app} = require('electron');
 var fs = require('fs');
 
 const appPath = path.resolve(__dirname, '../');
+const appDataPath = app.getPath('userData');
 
 const DBManager = require( appPath + '/js/DBManager.js' );
 
-const appDataPath = app.getPath('userData');
 const portfolioDBPath = appDataPath + '\\portfolio_test';
 const metadataDBPath = appDataPath + '\\metadata_test';
 let dbm;
@@ -24,8 +24,13 @@ describe('DBManager Test Suite', function() {
     });
 
     afterEach(function() {
-        fs.unlinkSync( portfolioDBPath );
-        fs.unlinkSync( metadataDBPath );
+        if( fs.existsSync(portfolioDBPath) ) {
+            fs.unlinkSync( portfolioDBPath );
+        }
+
+        if( fs.existsSync(metadataDBPath) ) {
+            fs.unlinkSync( metadataDBPath );
+        }
     });
 
     it('gets a coin value', function(done) {
@@ -57,6 +62,36 @@ describe('DBManager Test Suite', function() {
             sampleCoins.forEach(function(coin) {
                 assert.notEqual( -1, coins.indexOf(coin) );
             });
+            done();
+        });
+    });
+
+    it('checks if the metadataDB is not configured on new database', function(done) {
+        /*
+         * First DB Init, should not be configured
+         */
+        dbm.isConfigured(function(configured) {
+            assert.equal( false, configured );
+            done();
+        });
+    });
+
+    it('checks if metadataDB is configured properly', function(done) {
+        /*
+         * Test if configure api_key and secret_key works
+         */
+        var api_key = 'abcde';
+        var secret_key = 'defgh';
+
+        dbm.configure( api_key, secret_key, function() {
+            dbm.isConfigured(function(configured) {
+                assert.equal( true, configured );
+            });
+        });
+
+        dbm.getAPI(function(a, b) {
+            assert.equal( api_key, a );
+            assert.equal( secret_key, b );
             done();
         });
     });

@@ -18,7 +18,7 @@
   },
   "scripts": {
     "test": "electron-mocha",
-    "unit-test": "electron-mocha test/database.js"
+    "unit-test": "electron-mocha --grep main.js --invert"
   },
   "author": "whitesn",
   "license": "ISC"

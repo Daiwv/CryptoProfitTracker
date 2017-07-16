@@ -12,7 +12,7 @@ describe('application launch', function () {
     before(function () {
         app = new Application({
             path: electron,
-            args: [appPath]
+            args: appPath
         });
 
         return app.start();

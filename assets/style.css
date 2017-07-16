@@ -7,33 +7,52 @@ html {
 }
 
 body {
-    height: 98%;
+    height: 100%;
 }
 
 .cpt-container {
     height: 100%;
-    padding: 5px;
 }
 
-.cpt-container > div {
-    padding: 5px;
-    box-sizing: border-box;
+.cpt-sidebar, #cpt-mainwindow {
     height: 100%;
-}
-
-.cpt-coins, .cpt-transactions {
-    height: 100%;
-    border: solid 3px rgb(230,230,230);
-    padding: 10px;
     box-sizing: border-box;
 }
 
-.cpt-coins h1, .cpt-transactions h1 {
-    float: left;
+/*
+ * Sidebar CSS
+ */
+
+.cpt-sidebar {
+    border-right: solid 4px #ededed;
+}
+
+.cpt-sidebar ul {
+    list-style: none;
+    padding: 0;
     margin: 0;
 }
 
-.cpt-coins i, .cpt-transactions i {
-    margin: 5px 0 0 0;
-    float: right;
+.cpt-sidebar ul li {
+    width: 100%;
+    padding-top: 40%;
+    padding-bottom: 40%;
+    text-align: center;
+    box-sizing: border-box;
+    border-bottom: solid 2px #ededed;
+}
+
+/*
+ * Main table CSS
+ */
+
+#cpt-mainwindow table {
+    width: 100%;
+}
+
+/*
+ * Form CSS
+ */
+.cpt-auth {
+    padding: 20px;
 }
