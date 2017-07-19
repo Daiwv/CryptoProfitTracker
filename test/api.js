@@ -1,13 +1,13 @@
-var Application = require('spectron').Application
-var assert = require('assert');
-var path = require('path');
-var chai = require('chai');
-var expect = chai.expect;
-var chaiAsPromised = require('chai-as-promised');
+const Application = require('spectron').Application
+const assert = require('assert');
+const path = require('path');
+const chai = require('chai');
+const expect = chai.expect;
+const chaiAsPromised = require('chai-as-promised');
 chai.use(chaiAsPromised);
-var {app} = require('electron');
-var fs = require('fs');
-var _ = require('lodash');
+const {app} = require('electron');
+const fs = require('fs');
+const _ = require('lodash');
 
 const appPath = path.resolve(__dirname, '../');
 const appDataPath = app.getPath('userData');
@@ -18,8 +18,7 @@ const apikeyPath = appPath + '\\test\\config.json';
 const portfolioDBPath = appDataPath + '\\portfolio_test';
 const metadataDBPath = appDataPath + '\\metadata_test';
 
-let dbm;
-let apiManager;
+let dbm, apiManager;
 
 describe('APIManager Test Suite', () => {
 
@@ -147,7 +146,7 @@ describe('APIManager Test Suite', () => {
             });
         }
 
-        var orderHistoryFilteredKeys = ['Exchange', 'OrderType', 'Quantity', 'Commission', 'Price', 'PricePerUnit'];
+        var orderHistoryFilteredKeys = ['OrderUuid', 'Exchange', 'OrderType', 'Quantity', 'Commission', 'PricePerUnit'];
 
         for( time in mappedObjs ) {
             order = mappedObjs[time];
@@ -193,7 +192,7 @@ describe('APIManager Test Suite', () => {
             });
         }
 
-        var orderHistoryFilteredKeys = ['Currency', 'Amount'];
+        var orderHistoryFilteredKeys = ['PaymentUuid', 'Currency', 'Amount'];
 
         for( time in mappedObjs ) {
             order = mappedObjs[time];
@@ -251,7 +250,7 @@ describe('APIManager Test Suite', () => {
             });
         }
 
-        var orderHistoryFilteredKeys = ['Currency', 'Amount'];
+        var orderHistoryFilteredKeys = ['Id', 'Currency', 'Amount'];
 
         for( time in mappedObjs ) {
             order = mappedObjs[time];
@@ -263,7 +262,7 @@ describe('APIManager Test Suite', () => {
 
     it('tests getTransactions method', function(done) {
         this.timeout( 10000 );
-        apiManager.getTransactions((transactions) => {
+        apiManager.getTransactions( null, (transactions) => {
             assert.notEqual(undefined, transactions)
             done();
         });

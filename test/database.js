@@ -1,12 +1,12 @@
-var Application = require('spectron').Application
-var assert = require('assert');
-var path = require('path');
-var chai = require('chai');
-var expect = chai.expect;
-var chaiAsPromised = require('chai-as-promised');
+const Application = require('spectron').Application
+const assert = require('assert');
+const path = require('path');
+const chai = require('chai');
+const expect = chai.expect;
+const chaiAsPromised = require('chai-as-promised');
 chai.use(chaiAsPromised);
-var {app} = require('electron');
-var fs = require('fs');
+const {app} = require('electron');
+const fs = require('fs');
 
 const appPath = path.resolve(__dirname, '../');
 const appDataPath = app.getPath('userData');

@@ -1,6 +1,7 @@
 const {app} = require('electron');
 const Datastore = require('nedb');
 const fs = require('fs');
+const await = require('await');
 
 class DBManager {
     constructor( portfolioDBPath, metadataDBPath ) {
@@ -76,14 +77,40 @@ class DBManager {
      * @param {requestCallback} fn - Called when done
      */
      configure( api_key, secret_key, fn ) {
-         this.metadataDB.update({'meta': 'api_key'},
-            {'meta': 'api_key', 'value': api_key},{});
+        var updates = await('api', 'secret');
 
-         this.metadataDB.update({'meta': 'secret_key'},
-            {'meta': 'secret_key', 'value': secret_key},{},
-            () => {
-                fn();
-            });
+        this.metadataDB.update({'meta': 'api_key'}, {'meta': 'api_key', 'value': api_key},{},() => {
+            updates.keep( 'api', true );
+        });;
+
+        this.metadataDB.update({'meta': 'secret_key'}, {'meta': 'secret_key', 'value': secret_key},{},() => {
+            updates.keep( 'secret', true );
+        });
+
+        updates.then(function(updates) {
+            fn();
+        });
+     }
+
+     /*
+      * @param {Date} last_sync - The latest time of synchronization to Bittrex API
+      * @param {String} last_tx_id - The last transaction ID sync'd
+      * @param {requestCallback} fn
+      */
+     synchronize( last_sync, last_tx_id, fn ) {
+        var updates = await('sync', 'tx');
+
+        this.metadataDB.update({'meta': 'last_sync'}, {'meta': 'last_sync', 'value': last_sync},{},() => {
+            updates.keep( 'sync', true );
+        });;
+
+        this.metadataDB.update({'meta': 'last_tx_id'}, {'meta': 'last_tx_id', 'value': last_tx_id},{},() => {
+            updates.keep( 'tx', true );
+        });
+
+        updates.then(function(updates) {
+            fn();
+        });
      }
 
      /*

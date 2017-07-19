@@ -19,7 +19,7 @@ There will be two tables: **portfolio** and **metadata**
 | api_key | *bittrex api key* |
 | secret_key | *bittrex secret key* |
 | last_sync | *unix long time* |
-| last_tx_id | *tx id from bittrex* |
+| last_tx_uuid | *tx id from bittrex* |
 
 ## Mockup
 
@@ -29,7 +29,7 @@ Created using [creately.com](https://creately.com/)
 
 ## TODO Checklist
 
-[ ] Connect and get all transactions from Bittrex through the API.
+[x] Connect and get all transactions from Bittrex through the API.
 
 [ ] Design a database structure to keep the portfolio and the last transaction sync'd.
 

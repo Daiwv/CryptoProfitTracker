@@ -97,22 +97,20 @@ class APIManager {
         switch( type ) {
             case 'ORDER':
             timeKey = "Closed";
-            filteredKeys = ['Exchange', 'OrderType', 'Quantity', 'Commission', 'Price',
-                            'PricePerUnit'];
+            filteredKeys = ['OrderUuid', 'Exchange', 'OrderType', 'Quantity', 'QuantityRemaining', 'Commission', 'Price', 'PricePerUnit'];
             break;
 
             case 'WITHDRAWAL':
             timeKey = "Opened";
-            filteredKeys = ['Currency', 'Amount'];
+            filteredKeys = ['PaymentUuid', 'Currency', 'Amount'];
             break;
 
             case 'DEPOSIT':
             timeKey = "LastUpdated";
-            filteredKeys = ['Currency', 'Amount'];
+            filteredKeys = ['Id', 'Currency', 'Amount'];
             break;
         }
 
-        // TODO: FIND APPROPRIATE DATA TYPE FOR THIS (SORTED BY DATETIME)
         objs.forEach((obj) => {
             var time = obj[timeKey];
             var filteredObj = this.filterKeys( obj, filteredKeys );
@@ -163,7 +161,7 @@ class APIManager {
     }
 
     /*
-     * This is the main function to get all the sorted tx with this structure:
+     * First time fetching without specifying lastId
      * {
      *   type: ('DEPOSIT' | 'WITHDRAWAL' | 'ORDER'),
      *   time: (datetime),
@@ -171,7 +169,23 @@ class APIManager {
      *  }
      * @param {requestCallback} fn - return all the transaction histories
      */
-     getTransactions( fn ) {
+    getTransactions( fn ) {
+        this.getTransactions( null, (combinedHistories) => {
+            fn(combinedHistories);
+        });
+    }
+
+    /*
+     * This is the main function to get all the sorted tx with this structure:
+     * {
+     *   type: ('DEPOSIT' | 'WITHDRAWAL' | 'ORDER'),
+     *   time: (datetime),
+     *   info: {...}
+     *  }
+     * @param {String} lastId - the last transactions sync'd to the database
+     * @param {requestCallback} fn - return all the transaction histories
+     */
+     getTransactions( lastId, fn ) {
         var histories = await('order', 'withdrawal', 'deposit');
 
         this.getOrderHistory((history) => {
@@ -201,6 +215,33 @@ class APIManager {
                 var dateB = b.time;
                 return dateA - dateB;
             });
+
+            if( lastId != null ) {
+                for(var i = 0; i < combinedHistories.length; i++) {
+                    var id;
+
+                    switch(combinedHistories[i]['type']) {
+                    case 'ORDER':
+                        id = combinedHistories[i]['info']['OrderUuid'];
+                        break;
+
+                    case 'DEPOSIT':
+                        id = combinedHistories[i]['info']['Id'];
+                        break;
+
+                    case 'WITHDRAWAL':
+                        id = combinedHistories[i]['info']['PaymentUuid'];
+                        break;
+                    }
+
+                    if( id != lastId ) {
+                        combinedHistories.splice(i--, 1);
+                    } else {
+                        combinedHistories.splice(i--, 1);
+                        break;
+                    }
+                }
+            }
 
             fn( combinedHistories );
         });

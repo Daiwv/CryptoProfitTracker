@@ -8,8 +8,10 @@ const metadataDBPath = appDataPath + '\\metadata';
 const dbm = new DBManager( portfolioDBPath, metadataDBPath );
 
 let mainWindow;
+let portfolioCalc, apiManager, dbManager;
 
 app.on('ready', () => {
+    
     mainWindow = new BrowserWindow({
         height: 600,
         width: 900,
