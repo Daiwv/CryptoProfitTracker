@@ -1,5 +1,7 @@
 const crypto = require('crypto');
 const request = require('request');
+const await = require('await');
+const _ = require('lodash');
 
 const BITTREX_API_URL = 'https://bittrex.com/api/v1.1';
 
@@ -30,7 +32,6 @@ class APIManager {
     }
 
     /*
-     * Check whether
      * @return {Bool} Return TRUE if API key and Secret key is valid
      */
     isValidAuth() {
@@ -38,10 +39,11 @@ class APIManager {
     }
 
     /*
-     * @param {requestCallback} fn - return the balances
+     * @param {String} path - The API path
+     * @param {requestCallback} fn - Return the JSON result if success, undefined otherwise
      */
-    getBalances( fn ) {
-        var path = this.addURLParam( '/account/getbalances' );
+    call( path, fn ) {
+        var path = this.addURLParam( path );
         var sign = this.generateSign( BITTREX_API_URL + path );
         var options = {
             url: BITTREX_API_URL + path,
@@ -53,25 +55,83 @@ class APIManager {
         request(options, (err, res, body) => {
             if( !err && res.statusCode == 200 ) {
                 var bittrexResponse = JSON.parse( body );
-
                 if( bittrexResponse.success ) {
-                    var bittrexResult = bittrexResponse.result;
-                    var balances = [];
-
-                    bittrexResult.forEach((ele) => {
-                        var currencyName = ele.Currency;
-                        var balance = ele.Balance;
-
-                        if( balance > 0 ) {
-                            balances.push(ele);
-                        }
-                    });
-
-                    fn( balances );
+                    fn( bittrexResponse.result );
+                    return;
                 }
             }
 
-            fn(-1);
+            fn(undefined);
+        });
+    }
+
+    /*
+     * Filter the keys & values of an object, such that the filteredObjs
+     * will only contain have the keys from the sent 'keys' argument.
+     * @param {Object} obj - The object to be filtered
+     * @param {Object} keys - List of keys to be kept
+     * @return {Object} filteredObjs - The filtered object
+     */
+    filterKeys( obj, keys ) {
+        var filteredObj = {};
+
+        keys.forEach((key) => {
+            filteredObj[key] = obj[key];
+        });
+
+        return filteredObj;
+    }
+
+    /*
+     * Move the date as the key, such that each of the tx will
+     * have date as its key and the details of the tx for its value.
+     * @param {Object} objs - The response from bittrex API call
+     * @param {String} type - {ORDER | WITHDRAWAL | DEPOSIT}, the history type
+     * @return {Object} mappedObjs - The object with 'date' as its key
+     */
+    mapToDate( objs, type ) {
+        var mappedObjs = [];
+        var timeKey;
+        var filteredKeys;
+
+        switch( type ) {
+            case 'ORDER':
+            timeKey = "Closed";
+            filteredKeys = ['Exchange', 'OrderType', 'Quantity', 'Commission', 'Price',
+                            'PricePerUnit'];
+            break;
+
+            case 'WITHDRAWAL':
+            timeKey = "Opened";
+            filteredKeys = ['Currency', 'Amount'];
+            break;
+
+            case 'DEPOSIT':
+            timeKey = "LastUpdated";
+            filteredKeys = ['Currency', 'Amount'];
+            break;
+        }
+
+        // TODO: FIND APPROPRIATE DATA TYPE FOR THIS (SORTED BY DATETIME)
+        objs.forEach((obj) => {
+            var time = obj[timeKey];
+            var filteredObj = this.filterKeys( obj, filteredKeys );
+            var mappedObj = {}
+            mappedObj['info'] = filteredObj;
+            mappedObj['type'] = type;
+            mappedObj['time'] = new Date(time);
+            mappedObjs.push( mappedObj );
+        });
+
+        return mappedObjs;
+    }
+
+    /*
+     * @param {requestCallback} fn - return the balances
+     */
+    getBalances( fn ) {
+        this.call('/account/getbalances', (result) => {
+            fn( result );
         });
     }
 
@@ -79,27 +139,72 @@ class APIManager {
      * @param {requestCallback} fn - return the order history
      */
     getOrderHistory( fn ) {
-        var path = this.addURLParam( '/account/getorderhistory' );
-        var sign = this.generateSign( BITTREX_API_URL + path );
-        var options = {
-            url: BITTREX_API_URL + path,
-            headers: {
-                apisign: sign
-            }
-        };
-
-        request(options, (err, res, body) => {
-            if( !err && res.statusCode == 200 ) {
-                var bittrexResponse = JSON.parse( body );
-
-                if( bittrexResponse.success ) {
-                    fn( bittrexResponse.result );
-                }
-            }
-
-            fn(-1);
-        });
+         this.call('/account/getorderhistory', (result) => {
+              fn( result );
+         });
     }
+
+    /*
+     * @param {requestCallback} fn - return the withdrawal history
+     */
+    getWithdrawalHistory( fn ) {
+         this.call('/account/getwithdrawalhistory', (result) => {
+              fn( result );
+         });
+    }
+
+    /*
+     * @param {requestCallback} fn - return the deposit history
+     */
+    getDepositHistory( fn ) {
+         this.call('/account/getdeposithistory', (result) => {
+              fn( result );
+         });
+    }
+
+    /*
+     * This is the main function to get all the sorted tx with this structure:
+     * {
+     *   type: ('DEPOSIT' | 'WITHDRAWAL' | 'ORDER'),
+     *   time: (datetime),
+     *   info: {...}
+     *  }
+     * @param {requestCallback} fn - return all the transaction histories
+     */
+     getTransactions( fn ) {
+        var histories = await('order', 'withdrawal', 'deposit');
+
+        this.getOrderHistory((history) => {
+            history = this.mapToDate(history, 'ORDER');
+            histories.keep( 'order', history );
+        });
+
+        this.getWithdrawalHistory((history) => {
+            history = this.mapToDate(history, 'WITHDRAWAL');
+            histories.keep( 'withdrawal', history );
+        });
+
+        this.getDepositHistory((history) => {
+            history = this.mapToDate(history, 'DEPOSIT');
+            histories.keep( 'deposit', history );
+        });
+
+        histories.then(function(history) {
+            var orderHistory = history.order;
+            var withdrawalHistory = history.withdrawal;
+            var depositHistory = history.deposit;
+
+            var combinedHistories = orderHistory.concat(withdrawalHistory).concat(depositHistory);
+
+            combinedHistories.sort(function compare(a,b) {
+                var dateA = a.time;
+                var dateB = b.time;
+                return dateA - dateB;
+            });
+
+            fn( combinedHistories );
+        });
+     }
 };
 
 module.exports = APIManager;
