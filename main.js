@@ -33,8 +33,13 @@ app.on('ready', () => {
         backgroundColor: '#fff'
     });
 
-    mainWindow.setMenu(null);
+    //mainWindow.setMenu(null);
     mainWindow.loadURL('file://' + __dirname + '/index.html');
+
+    mainWindow.on('close', function (event) {
+        mainWindow.hide();
+        event.preventDefault();
+    })
 });
 
 ipcMain.on('bittrex_auth_add', (event, arg) => {

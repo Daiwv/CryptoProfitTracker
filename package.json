@@ -6,6 +6,7 @@
   "dependencies": {
     "await": "^0.2.6",
     "lodash": "^4.17.4",
+    "moment": "^2.18.1",
     "nedb": "^1.8.0",
     "request": "^2.81.0"
   },

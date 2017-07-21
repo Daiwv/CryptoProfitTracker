@@ -42,12 +42,44 @@ body {
     border-bottom: solid 2px #ededed;
 }
 
+.cpt-sidebar ul li:hover {
+    background: #ededed;
+    cursor: pointer;
+}
+
 /*
  * Main table CSS
  */
 
 #cpt-mainwindow table {
     width: 100%;
+}
+
+.cpt-portfolio-footer {
+    position: absolute;
+    bottom: 0;
+    box-sizing: border-box;
+    width: inherit;
+    background: #ededed;
+    padding: 5px;
+}
+
+.cpt-update {
+    display: inline-block;
+    position: absolute;
+    right: 10px;
+}
+
+.cpt-update:hover {
+    cursor: pointer;
+}
+
+.cpt-profit-positive {
+    color: green;
+}
+
+.cpt-profit-negative {
+    color: red;
 }
 
 /*

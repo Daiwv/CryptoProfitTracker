@@ -48,14 +48,14 @@ Created using [creately.com](https://creately.com/)
 
 [x] Display all assets and the average buy rate of it.
 
-[ ] Fix bug where updated ticker will mess the order of the odd and non-odd <td>
+[x] Fix bug where updated ticker will mess the order of the odd and non-odd <td>
 
-[ ] Update UI to match initial mock, show last sync time and sync button on the bottom of the window.
+[x] Update UI to match initial mock, show last sync time and sync button on the bottom of the window.
 
 [ ] Design a database structure to keep the portfolio and the last transaction sync'd. (Currently it's fetching all transactions and recalculating every time)
 
 [ ] Sort by field.
 
-[ ] Show loading animation if data is being fetched.
+[x] Show loading animation if data is being fetched.
 
-[ ] Effect for Sidebar Buttons Hover.
+[x] Effect for Sidebar Buttons Hover.
