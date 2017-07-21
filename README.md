@@ -33,10 +33,12 @@ Created using [creately.com](https://creately.com/)
 
 [x] Consolidate the transactions data based on Deposit, Withdrawal, and Order History
 
+[x] Display all assets and the average buy rate of it.
+
 [ ] Design a database structure to keep the portfolio and the last transaction sync'd. (Currently it's fetching all transactions and recalculating every time)
 
 [ ] Sort by field
 
-[x] Display all assets and the buy rate of it.
+[ ] Show loading animation if data is being fetched.
 
-[ ] CSS effect for more intuitive UX.
+[ ] Effect for Sidebar Buttons Hover
