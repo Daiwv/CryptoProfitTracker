@@ -11,19 +11,3 @@
         <label class="cpt-auth-submit pure-button pure-button-primary">Submit</label>
     </fieldset>
 </form>
-
-<script>
-const {ipcRenderer} = require('electron');
-
-$(".cpt-auth-submit").click(function() {
-    var api_key = $("#apikey").val();
-    var secret_key = $("#secret_key").val();
-
-    const bittrex_auth = {
-        'api_key': api_key,
-        'secret_key': secret_key
-    };
-
-    ipcRenderer.send('bittrex_auth_add', bittrex_auth);
-});
-</script>

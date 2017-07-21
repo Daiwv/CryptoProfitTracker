@@ -18,10 +18,6 @@ class PortfolioCalculator {
         }
     }
 
-    transactionsToPortfolio( transactions ) {
-        return this.transactionsToPortfolio( undefined, transactions );
-    }
-
     /*
      * @param {Object} balances - The current portfolio, undefined if none;
      * @param {Object} transactions - The new transactions to be applied
@@ -40,6 +36,7 @@ class PortfolioCalculator {
             case 'WITHDRAWAL':
                 var balance = _.find(balances, { coin : tx_info['Currency'] });
                 balance['amount'] -= parseFloat(tx_info['Amount']);
+                balance['amount'] -= parseFloat(tx_info['TxCost']);
                 break;
 
             case 'DEPOSIT':
@@ -66,12 +63,21 @@ class PortfolioCalculator {
                 switch( tx_info['OrderType'] ) {
                 case "LIMIT_SELL":
                     var qt = tx_info['Quantity'] - tx_info['QuantityRemaining'];
-
                     var dstBalance = _.find(balances, { coin : exchangeDestination });
+
                     dstBalance['amount'] -= qt;
 
                     var srcBalance = _.find(balances, { coin : exchangeSource });
-                    srcBalance['amount'] += (tx_info['Price'] - tx_info['Commission']);
+                    var addedSrcBalance = (tx_info['Price'] - tx_info['Commission']);
+                    if( srcBalance == undefined ) {
+                        balance = {};
+                        balance['coin'] = exchangeSource;
+                        balance['buy_rate'] = null;
+                        balance['amount'] = parseFloat(addedSrcBalance);
+                        balances.push( balance );
+                    } else {
+                        srcBalance['amount'] += addedSrcBalance;
+                    }
                     break;
 
                 case "LIMIT_BUY":

@@ -15,7 +15,7 @@ const appDataPath = app.getPath('userData');
 const APIManager = require( appPath + '/js/APIManager.js' );
 const DBManager = require( appPath + '/js/DBManager.js' );
 const PortfolioCalculator = require( appPath + '/js/PortfolioCalculator.js' );
-const apikeyPath = appPath + '\\test\\config.json';
+const apikeyPath = appPath + '\\config.json';
 const portfolioDBPath = appDataPath + '\\portfolio_test';
 const metadataDBPath = appDataPath + '\\metadata_test';
 
@@ -24,13 +24,13 @@ let pc, apiManager, dbManager;
 describe('PortfolioCalculator Test Suite' , () => {
 
     before(function(done) {
-        dbm = new DBManager( portfolioDBPath, metadataDBPath );
+        dbManager = new DBManager( portfolioDBPath, metadataDBPath, () => {
+            var keys = JSON.parse(fs.readFileSync(apikeyPath));
 
-        var keys = JSON.parse(fs.readFileSync(apikeyPath));
-
-        dbm.configure( keys['api_key'], keys['secret_key'], () => {
-            apiManager = new APIManager( dbm, () => {
-                done();
+            dbManager.configure( keys['api_key'], keys['secret_key'], () => {
+                apiManager = new APIManager( dbManager, () => {
+                    done();
+                });
             });
         });
 
@@ -80,7 +80,7 @@ describe('PortfolioCalculator Test Suite' , () => {
                 {
                     'Id': '1',
                     'Currency': 'BTC',
-                    'Amount': '10'
+                    'Amount': '10',
                 }
             },
             {
@@ -90,7 +90,8 @@ describe('PortfolioCalculator Test Suite' , () => {
                 {
                     'Id': '2',
                     'Currency': 'BTC',
-                    'Amount': '5'
+                    'Amount': '5',
+                    'TxCost': '1'
                 }
             }
         ];
@@ -98,7 +99,7 @@ describe('PortfolioCalculator Test Suite' , () => {
         balances = pc.transactionsToPortfolio(undefined, sampleTransactions);
         var balance = _.find(balances, { 'coin': "BTC"});
         assert.notEqual( undefined, balance );
-        assert.equal( 5, balance['amount'] );
+        assert.equal( 4, balance['amount'] );
     });
 
     it('test parseOrderExchange method', function(done) {
@@ -128,9 +129,7 @@ describe('PortfolioCalculator Test Suite' , () => {
     it('tests transactionsToPortfolio ORDER', function(done) {
         this.timeout( 12000 );
         apiManager.getTransactions( null, (combinedHistories) => {
-            console.log("FETCHED TRANSACTS!");
             var balances = pc.transactionsToPortfolio( undefined, combinedHistories);
-            console.log( balances );
             done();
         });
     });

@@ -31,6 +31,12 @@ Created using [creately.com](https://creately.com/)
 
 [x] Connect and get all transactions from Bittrex through the API.
 
-[ ] Design a database structure to keep the portfolio and the last transaction sync'd.
+[x] Consolidate the transactions data based on Deposit, Withdrawal, and Order History
 
-[ ] Consolidate the transactions data, and display all assets.
+[ ] Design a database structure to keep the portfolio and the last transaction sync'd. (Currently it's fetching all transactions and recalculating every time)
+
+[ ] Sort by field
+
+[x] Display all assets and the buy rate of it.
+
+[ ] CSS effect for more intuitive UX.

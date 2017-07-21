@@ -4,12 +4,14 @@ const fs = require('fs');
 const await = require('await');
 
 class DBManager {
-    constructor( portfolioDBPath, metadataDBPath ) {
+
+    constructor( portfolioDBPath, metadataDBPath, fn ) {
         this.portfolioDB = new Datastore({filename: portfolioDBPath, autoload: true});
         this.metadataDB = new Datastore( metadataDBPath );
 
         if( fs.existsSync(metadataDBPath) ) {
             this.metadataDB.loadDatabase();
+            fn();
         } else {
             this.metadataDB.loadDatabase();
             this.metadataDB.insert([
@@ -17,7 +19,13 @@ class DBManager {
                 { 'meta': 'secret_key', 'value': '' },
                 { 'meta': 'last_sync', 'value': '' },
                 { 'meta': 'last_tx_id', 'value': '' }
-            ], function(err) {
+            ], function(err, newDoc) {
+                if( err != null ) {
+                    console.log("There is an error : ");
+                    console.log( err );
+                }
+
+                fn();
             });
         }
     }
@@ -25,11 +33,11 @@ class DBManager {
     /*
      * Get the amount of coin of certain name inside the portfolio
      * @param {String} coinName - The name of coin, e.g.: 'BTC', 'ETH', 'ANS'
-     * @param {requestCallback} fn - The callback function to return the amount
+     * @param {requestCallback} fn
      */
-    getCoinValue( coinName, fn ) {
+    getCoinAmount( coinName, fn ) {
         this.portfolioDB.find({ 'coin': coinName }, function(err, docs) {
-            var amt = -1;
+            var amt = null;
 
             if( docs.length == 1 ) {
                 amt = docs[0].amount;
@@ -41,7 +49,7 @@ class DBManager {
 
     /*
      * Get all the coins list in the portfolio
-     * @param {requestCallback} fn - The callback function to return the coins list
+     * @param {requestCallback} fn
      */
     getCoins( fn ) {
         this.portfolioDB.find({}, function(err, docs) {
@@ -52,6 +60,22 @@ class DBManager {
             });
 
             fn(coins);
+        });
+    }
+
+    /*
+     * Get all the entry in the portfolio
+     * @param {requestCallback} fn
+     */
+    getBalances( fn ) {
+        this.portfolioDB.find({}, function(err, docs) {
+            var balances = [];
+
+            docs.forEach(function(element) {
+                balances.push(element);
+            });
+
+            fn(balances);
         });
     }
 
@@ -91,6 +115,30 @@ class DBManager {
             fn();
         });
      }
+
+     /*
+      * Update the balances inside the db
+      * @param {Object} balances
+      * @param {requestCallback} fn - Called when done
+      */
+     updatePortfolio( balances, fn ) {
+         this.portfolioDB.remove({}, { multi: true }, (err, numRemoved) => {
+             balances.forEach((balance) => {
+                 var portDB = this.portfolioDB;
+                 this.portfolioDB.find({'coin': balance.coin}, function(err, docs) {
+                     if( docs.length == 1 ) {
+                         portDB.update({'coin': balance.coin}, balance);
+                     } else {
+                         portDB.insert( balance );
+                     }
+                 });
+
+                 if( balance == balances[balances.length - 1]) {
+                     return fn();
+                 }
+            });
+         });
+    }
 
      /*
       * @param {Date} last_sync - The latest time of synchronization to Bittrex API

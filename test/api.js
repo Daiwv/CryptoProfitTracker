@@ -14,7 +14,7 @@ const appDataPath = app.getPath('userData');
 
 const APIManager = require( appPath + '/js/APIManager.js' );
 const DBManager = require( appPath + '/js/DBManager.js' );
-const apikeyPath = appPath + '\\test\\config.json';
+const apikeyPath = appPath + '\\config.json';
 const portfolioDBPath = appDataPath + '\\portfolio_test';
 const metadataDBPath = appDataPath + '\\metadata_test';
 
@@ -23,15 +23,16 @@ let dbm, apiManager;
 describe('APIManager Test Suite', () => {
 
     before((done) => {
-        dbm = new DBManager( portfolioDBPath, metadataDBPath );
+        dbm = new DBManager( portfolioDBPath, metadataDBPath, () => {
+            var keys = JSON.parse(fs.readFileSync(apikeyPath));
 
-        var keys = JSON.parse(fs.readFileSync(apikeyPath));
-
-        dbm.configure( keys['api_key'], keys['secret_key'], () => {
-            apiManager = new APIManager( dbm, () => {
-                done();
+            dbm.configure( keys['api_key'], keys['secret_key'], () => {
+                apiManager = new APIManager( dbm, () => {
+                    done();
+                });
             });
         });
+
     });
 
     after(() => {
@@ -192,7 +193,7 @@ describe('APIManager Test Suite', () => {
             });
         }
 
-        var orderHistoryFilteredKeys = ['PaymentUuid', 'Currency', 'Amount'];
+        var orderHistoryFilteredKeys = ['PaymentUuid', 'Currency', 'Amount', 'TxCost'];
 
         for( time in mappedObjs ) {
             order = mappedObjs[time];
@@ -266,5 +267,16 @@ describe('APIManager Test Suite', () => {
             assert.notEqual(undefined, transactions)
             done();
         });
+    });
+
+    it('tests getTicker method', function(done) {
+        this.timeout( 10000 );
+        apiManager.getTicker( 'BTC-LTC', (price) => {
+            assert.notEqual(undefined, price);
+            assert.notEqual(undefined, price.Bid);
+            assert.notEqual(undefined, price.Ask);
+            assert.notEqual(undefined, price.Last);
+            done();
+        } );
     });
 });

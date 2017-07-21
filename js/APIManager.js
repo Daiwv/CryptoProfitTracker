@@ -8,6 +8,12 @@ const BITTREX_API_URL = 'https://bittrex.com/api/v1.1';
 class APIManager {
 
     constructor( dbm, fn ) {
+        this.dbManager = dbm;
+        this.refreshAPI(() => { fn(); });
+    }
+
+    refreshAPI( fn ) {
+        var dbm = this.dbManager;
         dbm.getAPI((api_key, secret_key) => {
             this.API_KEY = api_key;
             this.API_SECRET = secret_key;
@@ -40,7 +46,8 @@ class APIManager {
 
     /*
      * @param {String} path - The API path
-     * @param {requestCallback} fn - Return the JSON result if success, undefined otherwise
+     * @param {requestCallback} fn - Return the JSON result if success, undefined
+     * @param {String} arg - (Optional) argument for the HTTP request otherwise
      */
     call( path, fn ) {
         var path = this.addURLParam( path );
@@ -51,6 +58,14 @@ class APIManager {
                 apisign: sign
             }
         };
+
+        if( arguments.length == 3 ) {
+            var args = arguments[2];
+
+            for( var key in args ) {
+                options.url += "&" + key + "=" + args[key];
+            }
+        }
 
         request(options, (err, res, body) => {
             if( !err && res.statusCode == 200 ) {
@@ -102,7 +117,7 @@ class APIManager {
 
             case 'WITHDRAWAL':
             timeKey = "Opened";
-            filteredKeys = ['PaymentUuid', 'Currency', 'Amount'];
+            filteredKeys = ['PaymentUuid', 'Currency', 'Amount', 'TxCost'];
             break;
 
             case 'DEPOSIT':
@@ -111,21 +126,23 @@ class APIManager {
             break;
         }
 
-        objs.forEach((obj) => {
-            var time = obj[timeKey];
-            var filteredObj = this.filterKeys( obj, filteredKeys );
-            var mappedObj = {}
-            mappedObj['info'] = filteredObj;
-            mappedObj['type'] = type;
-            mappedObj['time'] = new Date(time);
-            mappedObjs.push( mappedObj );
-        });
+        if( objs != undefined ) {
+            objs.forEach((obj) => {
+                var time = obj[timeKey];
+                var filteredObj = this.filterKeys( obj, filteredKeys );
+                var mappedObj = {}
+                mappedObj['info'] = filteredObj;
+                mappedObj['type'] = type;
+                mappedObj['time'] = new Date(time);
+                mappedObjs.push( mappedObj );
+            });
+        }
 
         return mappedObjs;
     }
 
     /*
-     * @param {requestCallback} fn - return the balances
+     * @param {requestCallback} fn
      */
     getBalances( fn ) {
         this.call('/account/getbalances', (result) => {
@@ -134,7 +151,7 @@ class APIManager {
     }
 
     /*
-     * @param {requestCallback} fn - return the order history
+     * @param {requestCallback}
      */
     getOrderHistory( fn ) {
          this.call('/account/getorderhistory', (result) => {
@@ -143,7 +160,7 @@ class APIManager {
     }
 
     /*
-     * @param {requestCallback} fn - return the withdrawal history
+     * @param {requestCallback} fn
      */
     getWithdrawalHistory( fn ) {
          this.call('/account/getwithdrawalhistory', (result) => {
@@ -152,7 +169,7 @@ class APIManager {
     }
 
     /*
-     * @param {requestCallback} fn - return the deposit history
+     * @param {requestCallback} fn
      */
     getDepositHistory( fn ) {
          this.call('/account/getdeposithistory', (result) => {
@@ -161,19 +178,14 @@ class APIManager {
     }
 
     /*
-     * First time fetching without specifying lastId
-     * {
-     *   type: ('DEPOSIT' | 'WITHDRAWAL' | 'ORDER'),
-     *   time: (datetime),
-     *   info: {...}
-     *  }
-     * @param {requestCallback} fn - return all the transaction histories
+     * @param {String} market - e.g.: "BTC-LTC"
+     * @param {requestCallback} fn
      */
-    getTransactions( fn ) {
-        this.getTransactions( null, (combinedHistories) => {
-            fn(combinedHistories);
-        });
-    }
+     getTicker( market, fn ) {
+         this.call('/public/getticker', (result) => {
+             fn( result );
+         }, { 'market' : market } );
+     }
 
     /*
      * This is the main function to get all the sorted tx with this structure:
