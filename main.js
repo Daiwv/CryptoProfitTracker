@@ -37,8 +37,7 @@ app.on('ready', () => {
     mainWindow.loadURL('file://' + __dirname + '/index.html');
 
     mainWindow.on('close', function (event) {
-        mainWindow.hide();
-        event.preventDefault();
+        app.quit();
     })
 });
 

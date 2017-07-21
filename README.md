@@ -8,6 +8,8 @@ Averaging up / down during trading can sometimes be troublesome as you want to f
 
 ## Usage
 
+Download binary source or if you are a developer:
+
     npm install -g electron
     electron .
 
