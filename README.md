@@ -1,6 +1,6 @@
 # Crypto Profit Tracker
 
-Consolidate the data taken from Bittrex account through API Key, show current portfolio with the margin (gain / loss percentage).
+Averaging up / down during trading can sometimes be troublesome as you want to find out the final rate that you get after all the transactions. Instead of using excel and have your time wasted, this app takes all your Bittrex transactions and help you calculate the final rate and display your portfolio with needed information.
 
 ## Preview (Alpha State)
 
