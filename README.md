@@ -2,6 +2,19 @@
 
 Consolidate the data taken from Bittrex account through API Key, show current portfolio with the margin (gain / loss percentage).
 
+## Preview (Alpha State)
+
+![Crypto Tracker Mock](images/preview.png)
+
+## Usage
+
+    npm install -g electron
+    electron .
+
+Input your API Key and Secret in the setting page, and submit (ONLY USE API w/ READ INFO PERMISSION, FURTHER PERMISSIONS ARE UNNECESSARY)
+
+On later version, electron should be installed as non-devDependencies and just add run script. Maybe add binary release using ```electron-package```
+
 ## Database
 
 There will be two tables: **portfolio** and **metadata**
@@ -35,10 +48,14 @@ Created using [creately.com](https://creately.com/)
 
 [x] Display all assets and the average buy rate of it.
 
+[ ] Fix bug where updated ticker will mess the order of the odd and non-odd <td>
+
+[ ] Update UI to match initial mock, show last sync time and sync button on the bottom of the window.
+
 [ ] Design a database structure to keep the portfolio and the last transaction sync'd. (Currently it's fetching all transactions and recalculating every time)
 
-[ ] Sort by field
+[ ] Sort by field.
 
 [ ] Show loading animation if data is being fetched.
 
-[ ] Effect for Sidebar Buttons Hover
+[ ] Effect for Sidebar Buttons Hover.
