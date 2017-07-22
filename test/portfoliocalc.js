@@ -126,7 +126,7 @@ describe('PortfolioCalculator Test Suite' , () => {
         });
     });
 
-    it('tests transactionsToPortfolio ORDER', function(done) {
+    it.only('tests transactionsToPortfolio ORDER', function(done) {
         this.timeout( 12000 );
         apiManager.getTransactions( null, (combinedHistories) => {
             var balances = pc.transactionsToPortfolio( undefined, combinedHistories);

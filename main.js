@@ -79,6 +79,9 @@ ipcMain.on('update_ticker', (event, arg) => {
                 event.sender.send("reply_ticker", result);
             }
         });
+
+        var btcEntry = { Coin : "BTC", Last: "1" };
+        event.sender.send("reply_ticker", btcEntry);
     });
 
 });

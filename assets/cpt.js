@@ -64,7 +64,7 @@ function setupPortfolioPage() {
             var buyRate;
 
             if( balance.buy_rate == null ) {
-                buyRate = 0;
+                buyRate = 1;
             } else {
                 buyRate = balance.buy_rate = parseFloat(balance.buy_rate).toFixed(6);
             }

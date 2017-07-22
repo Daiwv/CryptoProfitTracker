@@ -109,6 +109,11 @@ class PortfolioCalculator {
             }
         });
 
+        var btcEntry = _.find(balances, { coin : "BTC" });
+        if( btcEntry != undefined ) {
+            btcEntry['buy_rate'] = 1;
+        }
+
         return balances;
     }
 };
