@@ -1,6 +1,7 @@
 const {ipcRenderer} = require('electron');
 const await = require('await');
 const moment = require('moment');
+const _ = require('lodash');
 
 var homeHTML, settingHTML;
 var loadingHTML = "<i class=\"fa fa-spinner fa-spin fa-lg fa-fw\"></i>";
@@ -40,7 +41,19 @@ function setupPortfolioPage() {
         $(".cpt-last-sync").html( timeLabel );
     }
 
-    function refreshBalances() {
+    function refreshBalances(oldBalances) {
+        function findDeletedCoins(oldBalances) {
+            var deletedCoins = [];
+
+            oldBalances.forEach((oldBalance) => {
+                if( _.find(balances, oldBalance) == undefined ) {
+                    deletedCoins.push(oldBalance.coin);
+                }
+            });
+
+            return deletedCoins;
+        }
+
         function createCoinEntry( balance ) {
             var coinName = balance.coin;
             var amt = balance.amount;
@@ -56,6 +69,12 @@ function setupPortfolioPage() {
 
             return entry;
         }
+
+        var deletedCoins = findDeletedCoins(oldBalances);
+
+        deletedCoins.forEach((deletedCoin) => {
+            $(".coin-" + deletedCoin).remove();
+        });
 
         for( var i = 0; i < balances.length; i++ ) {
             var balance = balances[i];
@@ -183,7 +202,7 @@ function setupPortfolioPage() {
     function initPortfolio() {
         $("#cpt-mainwindow").html( homeHTML );
 
-        refreshBalances();
+        refreshBalances( balances );
 
         $(".cpt-update").click(function() {
             setBalancesLoading();
@@ -198,15 +217,18 @@ function setupPortfolioPage() {
 
     // Balances stored from last fetch from the DB
     ipcRenderer.on('reply_balances', (event,arg) => {
+        var oldBalances = balances.slice();
         balances = arg;
-        refreshBalances();
+        refreshBalances( oldBalances );
         updateTicker();
+        refreshSyncTime();
     });
 
     // Current Balance on Bittrex
     ipcRenderer.on('reply_update_portfolio', (event,arg) => {
+        var oldBalances = balances.slice();
         balances = arg;
-        refreshBalances();
+        refreshBalances( oldBalances );
         updateTicker();
         refreshSyncTime();
     });
