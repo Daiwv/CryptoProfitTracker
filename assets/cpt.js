@@ -57,7 +57,7 @@ function setupPortfolioPage() {
         function createCoinEntry( balance ) {
             var coinName = balance.coin;
             var amt = balance.amount;
-            var buyRate = balance.buy_rate;
+            var buyRate = parseFloat(balance.buy_rate).toFixed(7);
             var entry = "";
 
             entry += "<td>" + coinName + "</td>";
@@ -85,7 +85,7 @@ function setupPortfolioPage() {
             if( balance.buy_rate == null ) {
                 buyRate = 1;
             } else {
-                buyRate = balance.buy_rate = parseFloat(balance.buy_rate).toFixed(6);
+                buyRate = parseFloat(balance.buy_rate).toFixed(6);
             }
 
             if( balance.amount > 0 ) {
@@ -151,8 +151,9 @@ function setupPortfolioPage() {
     function fillTicker( ticker ) {
         var coinName = ticker.Coin;
         var curRate = ticker.Last;
-        var buyRate = $(".buy-rate-" + coinName).html();
-        var amount = $(".amt-" + coinName).html();
+        var balance = _.find( balances, { coin: coinName } );
+        var buyRate = balance.buy_rate;
+        var amount = balance.amount;
 
         if( amount > 0 ) {
             var profit = (curRate - buyRate) / buyRate;
