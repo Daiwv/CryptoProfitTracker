@@ -62,26 +62,35 @@ ipcMain.on('request_balances', (event, arg) => {
 });
 
 ipcMain.on('update_portfolio', (event, arg) => {
-    apiManager.getTransactions( null, (transactions) => {
-        var balances = portfolioCalculator.transactionsToPortfolio( undefined, transactions );
-        dbManager.updatePortfolio( balances, () => {});
-        event.sender.send('reply_update_portfolio', balances);
-    });
+	dbManager.isConfigured((isConfigured) => {
+		if( isConfigured ) {
+			apiManager.getTransactions( null, (transactions) => {
+				var balances = portfolioCalculator.transactionsToPortfolio( undefined, transactions );
+				dbManager.updatePortfolio( balances, () => {});
+				event.sender.send('reply_update_portfolio', balances);
+			});
+		} else {
+			event.sender.send('reply_update_portfolio', []);
+		}
+	});
 });
 
 ipcMain.on('update_ticker', (event, arg) => {
     arg.forEach((entry) => {
-        var market = "BTC-" + entry.coin;
+        if( entry.coin != "BTC" ) {
+            // TEMPORARY HACK, SHOULD STORE MARKET ON PROCESSING TRANSACTIONS
+            var market = "BTC-" + entry.coin;
 
-        apiManager.getTicker( market, function(result) {
-            if( result != undefined ) {
-                result["Coin"] = entry.coin;
-                event.sender.send("reply_ticker", result);
-            }
-        });
-
-        var btcEntry = { Coin : "BTC", Last: "1" };
-        event.sender.send("reply_ticker", btcEntry);
+            apiManager.getTicker( market, function(result) {
+                if( result != undefined ) {
+                    result["Coin"] = entry.coin;
+                    event.sender.send("reply_ticker", result);
+                }
+            });
+        } else {
+            var btcEntry = { Coin : "BTC", Last: 1 };
+            event.sender.send("reply_ticker", btcEntry);
+        }
     });
 
 });

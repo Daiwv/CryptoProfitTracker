@@ -22,11 +22,11 @@ On later version, electron should be installed as non-devDependencies and just a
 There will be two tables: **portfolio** and **metadata**
 
 #### Portfolio
-| coin | amount | buy_rate |
-| :--: | -----: | -------: |
-| ANS | 23.115 | 0.00341223 |
-| BTC | 0.425 | 1 |
-| ETH | 10.523 | 0.13341578 |
+| coin | amount | buy_rate | market |
+| :--: | -----: | -------: | -----: |
+| ANS | 23.115 | 0.00341223 | "BTC-ANS" |
+| BTC | 0.425 | 1 | - |
+| ETH | 10.523 | 0.13341578 | "BTC-ETH" |
 
 #### Metadata
 | meta | value |

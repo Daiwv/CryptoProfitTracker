@@ -57,7 +57,7 @@ function setupPortfolioPage() {
         function createCoinEntry( balance ) {
             var coinName = balance.coin;
             var amt = balance.amount;
-            var buyRate = parseFloat(balance.buy_rate).toFixed(7);
+            var buyRate = parseFloat(balance.buy_rate).toExponential(3);
             var entry = "";
 
             entry += "<td>" + coinName + "</td>";
@@ -79,13 +79,13 @@ function setupPortfolioPage() {
         for( var i = 0; i < balances.length; i++ ) {
             var balance = balances[i];
             var coinName = balance.coin;
-            var amt = balance.amount = parseFloat(balance.amount).toFixed(6);
+            var amt = balance.amount = parseFloat(balance.amount).toFixed(5);
             var buyRate;
 
             if( balance.buy_rate == null ) {
                 buyRate = 1;
             } else {
-                buyRate = parseFloat(balance.buy_rate).toFixed(6);
+                buyRate = parseFloat(balance.buy_rate).toExponential(3);
             }
 
             if( balance.amount > 0 ) {
@@ -164,11 +164,11 @@ function setupPortfolioPage() {
                 profitDisplay = "<label class=\"cpt-profit-positive\">" + profitDisplay + "</label>";
             }
 
-            $(".cur-rate-" + coinName).html( curRate );
+            $(".cur-rate-" + coinName).html( curRate.toExponential(3) );
             $(".profit-" + coinName).html( profitDisplay );
 
             var conversion = amount * curRate;
-            $(".btc-conv-" + coinName).html( conversion.toFixed(6) +
+            $(".btc-conv-" + coinName).html( conversion.toFixed(5) +
             " (<label class=\"btc-conv-rat-" + coinName + "\">" + loadingHTML + "</label>)" );
 
             if( allTickerFilled() ) {
