@@ -2,6 +2,7 @@ const crypto = require('crypto');
 const request = require('request');
 const await = require('await');
 const _ = require('lodash');
+const helper = require('./helper');
 
 const BITTREX_API_URL = 'https://bittrex.com/api/v1.1';
 
@@ -81,67 +82,6 @@ class APIManager {
     }
 
     /*
-     * Filter the keys & values of an object, such that the filteredObjs
-     * will only contain have the keys from the sent 'keys' argument.
-     * @param {Object} obj - The object to be filtered
-     * @param {Object} keys - List of keys to be kept
-     * @return {Object} filteredObjs - The filtered object
-     */
-    filterKeys( obj, keys ) {
-        var filteredObj = {};
-
-        keys.forEach((key) => {
-            filteredObj[key] = obj[key];
-        });
-
-        return filteredObj;
-    }
-
-    /*
-     * Move the date as the key, such that each of the tx will
-     * have date as its key and the details of the tx for its value.
-     * @param {Object} objs - The response from bittrex API call
-     * @param {String} type - {ORDER | WITHDRAWAL | DEPOSIT}, the history type
-     * @return {Object} mappedObjs - The object with 'date' as its key
-     */
-    mapToDate( objs, type ) {
-        var mappedObjs = [];
-        var timeKey;
-        var filteredKeys;
-
-        switch( type ) {
-            case 'ORDER':
-            timeKey = "Closed";
-            filteredKeys = ['OrderUuid', 'Exchange', 'OrderType', 'Quantity', 'QuantityRemaining', 'Commission', 'Price', 'PricePerUnit'];
-            break;
-
-            case 'WITHDRAWAL':
-            timeKey = "Opened";
-            filteredKeys = ['PaymentUuid', 'Currency', 'Amount', 'TxCost'];
-            break;
-
-            case 'DEPOSIT':
-            timeKey = "LastUpdated";
-            filteredKeys = ['Id', 'Currency', 'Amount'];
-            break;
-        }
-
-        if( objs != undefined ) {
-            objs.forEach((obj) => {
-                var time = obj[timeKey];
-                var filteredObj = this.filterKeys( obj, filteredKeys );
-                var mappedObj = {}
-                mappedObj['info'] = filteredObj;
-                mappedObj['type'] = type;
-                mappedObj['time'] = new Date(time);
-                mappedObjs.push( mappedObj );
-            });
-        }
-
-        return mappedObjs;
-    }
-
-    /*
      * @param {requestCallback} fn
      */
     getBalances( fn ) {
@@ -180,83 +120,14 @@ class APIManager {
     /*
      * @param {String} market - e.g.: "BTC-LTC"
      * @param {requestCallback} fn
+     *
+     * result
+     * { market: "BTC-LTC", Last: xxx }
      */
      getTicker( market, fn ) {
          this.call('/public/getticker', (result) => {
              fn( result );
          }, { 'market' : market } );
-     }
-
-    /*
-     * This is the main function to get all the sorted tx with this structure:
-     * {
-     *   type: ('DEPOSIT' | 'WITHDRAWAL' | 'ORDER'),
-     *   time: (datetime),
-     *   info: {...}
-     *  }
-     * @param {String} lastId - the last transactions sync'd to the database
-     * @param {requestCallback} fn - return all the transaction histories
-     */
-     getTransactions( lastId, fn ) {
-        var histories = await('order', 'withdrawal', 'deposit');
-
-        this.getOrderHistory((history) => {
-            history = this.mapToDate(history, 'ORDER');
-            histories.keep( 'order', history );
-        });
-
-        this.getWithdrawalHistory((history) => {
-            history = this.mapToDate(history, 'WITHDRAWAL');
-            histories.keep( 'withdrawal', history );
-        });
-
-        this.getDepositHistory((history) => {
-            history = this.mapToDate(history, 'DEPOSIT');
-            histories.keep( 'deposit', history );
-        });
-
-        histories.then(function(history) {
-            var orderHistory = history.order;
-            var withdrawalHistory = history.withdrawal;
-            var depositHistory = history.deposit;
-
-            var combinedHistories = orderHistory.concat(withdrawalHistory).concat(depositHistory);
-
-            combinedHistories.sort(function compare(a,b) {
-                var dateA = a.time;
-                var dateB = b.time;
-                return dateA - dateB;
-            });
-
-            if( lastId != null ) {
-                for(var i = 0; i < combinedHistories.length; i++) {
-                    var id;
-
-                    switch(combinedHistories[i]['type']) {
-                    case 'ORDER':
-                        id = combinedHistories[i]['info']['OrderUuid'];
-                        break;
-
-                    case 'DEPOSIT':
-                        id = combinedHistories[i]['info']['Id'];
-                        break;
-
-                    case 'WITHDRAWAL':
-                        id = combinedHistories[i]['info']['PaymentUuid'];
-                        break;
-                    }
-
-                    if( id != lastId ) {
-                        combinedHistories.splice(i--, 1);
-                    } else {
-                        combinedHistories.splice(i--, 1);
-                        break;
-                    }
-                }
-            }
-
-            fn( combinedHistories );
-        });
      }
 };
 

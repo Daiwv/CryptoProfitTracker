@@ -5,6 +5,9 @@
   "description": "an Application to track your CyrptoCurrency Profits.",
   "dependencies": {
     "await": "^0.2.6",
+    "csv-parser": "^1.11.0",
+    "fast-csv": "^2.4.0",
+    "jsdom": "^11.1.0",
     "lodash": "^4.17.4",
     "moment": "^2.18.1",
     "nedb": "^1.8.0",

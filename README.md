@@ -2,6 +2,8 @@
 
 Averaging up / down during trading can sometimes be troublesome as you want to find out the final rate that you get after all the transactions. Instead of using excel and have your time wasted, this app takes all your Bittrex transactions and help you calculate the final rate and display your portfolio with needed information.
 
+This is currently still in ALPHA state, meaning the development is still ongoing and it might have lots of bugs.
+
 ## Preview (Alpha State)
 
 ![Crypto Tracker Mock](images/preview.png)
@@ -42,22 +44,12 @@ There will be two tables: **portfolio** and **metadata**
 
 Created using [creately.com](https://creately.com/)
 
-## TODO Checklist
+## TODO
 
-[x] Connect and get all transactions from Bittrex through the API.
+- Bittrex API only supports 65 last transactions, modify the requirement for needing initial complete transaction (CSV) from Bittrex then do checking whether /account/getbalances matches the current calculation, ask user to re-upload when it's not.
 
-[x] Consolidate the transactions data based on Deposit, Withdrawal, and Order History
+- Design a database structure to keep the portfolio and the last transaction sync'd. (Currently it's fetching all transactions and recalculating every time)
 
-[x] Display all assets and the average buy rate of it.
+- Set BTC Current Rate to the BTC-USDT Market
 
-[x] Fix bug where updated ticker will mess the order of the odd and non-odd <td>
-
-[x] Update UI to match initial mock, show last sync time and sync button on the bottom of the window.
-
-[ ] Design a database structure to keep the portfolio and the last transaction sync'd. (Currently it's fetching all transactions and recalculating every time)
-
-[ ] Sort by field.
-
-[x] Show loading animation if data is being fetched.
-
-[x] Effect for Sidebar Buttons Hover.
+- Sort by field.

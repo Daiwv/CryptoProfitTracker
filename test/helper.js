@@ -5,63 +5,15 @@ const chai = require('chai');
 const expect = chai.expect;
 const chaiAsPromised = require('chai-as-promised');
 chai.use(chaiAsPromised);
-const {app} = require('electron');
-const fs = require('fs');
 const _ = require('lodash');
+const {app} = require('electron');
 
 const appPath = path.resolve(__dirname, '../');
-const appDataPath = app.getPath('userData');
 
-const APIManager = require( appPath + '/js/APIManager.js' );
-const DBManager = require( appPath + '/js/DBManager.js' );
-const apikeyPath = appPath + '\\config.json';
-const portfolioDBPath = appDataPath + '\\portfolio_test';
-const metadataDBPath = appDataPath + '\\metadata_test';
+const helper = require( appPath + '/js/helper.js' );
 
-let dbm, apiManager;
-
-describe('APIManager Test Suite', () => {
-
-    before((done) => {
-        dbm = new DBManager( portfolioDBPath, metadataDBPath, () => {
-            var keys = JSON.parse(fs.readFileSync(apikeyPath));
-
-            dbm.configure( keys['api_key'], keys['secret_key'], () => {
-                apiManager = new APIManager( dbm, () => {
-                    done();
-                });
-            });
-        });
-
-    });
-
-    after(() => {
-        if(fs.existsSync(portfolioDBPath)) {
-            fs.unlinkSync(portfolioDBPath);
-        }
-
-        if(fs.existsSync(metadataDBPath)) {
-            fs.unlinkSync(metadataDBPath);
-        }
-    });
-
-    it('tests getBalances method', function(done) {
-        this.timeout( 10000 );
-        apiManager.getBalances((data) => {
-            assert.notEqual( undefined, data );
-            done();
-        });
-    });
-
-    it('tests getOrderHistory method', function(done) {
-        this.timeout( 10000 );
-        apiManager.getOrderHistory((data) => {
-            assert.notEqual( undefined, data );
-            done();
-        });
-    });
-
-    it('tests filterJSON method', function(done) {
+describe('Helper Test Suite', () => {
+    it('tests filterKeys method', function() {
         var sampleObj = {
     			"Currency" : "DOGE",
     			"Balance" : 0.00000000,
@@ -79,28 +31,9 @@ describe('APIManager Test Suite', () => {
             "Balance" : 0.00000000
         };
 
-        var filteredObj = apiManager.filterKeys( sampleObj, keys );
+        var filteredObj = helper.filterKeys(sampleObj, keys);
 
-        assert.equal( true, _.isEqual(resultObj,filteredObj) );
-
-        done();
-    });
-
-    it('tests getWithdrawalHistory method', function(done) {
-        this.timeout( 10000 );
-        apiManager.getWithdrawalHistory((data) => {
-            assert.notEqual( undefined, data );
-            done();
-        });
-    });
-
-
-    it('tests getDepositHistory method', function(done) {
-        this.timeout( 10000 );
-        apiManager.getDepositHistory((data) => {
-            assert.notEqual( undefined, data );
-            done();
-        });
+        assert.equal(true, _.isEqual(resultObj,filteredObj));
     });
 
     it('tests mapToDate method for orderHistory', function() {
@@ -136,7 +69,7 @@ describe('APIManager Test Suite', () => {
             Closed: '2017-07-13T02:02:11.26' },
         ];
 
-        var mappedObjs = apiManager.mapToDate( orderHistoryExample, 'ORDER');
+        var mappedObjs = helper.mapToDate( orderHistoryExample, 'ORDER');
 
         var basicKeys = [ 'type', 'info'];
 
@@ -182,7 +115,7 @@ describe('APIManager Test Suite', () => {
             Canceled: false,
             InvalidAddress: false } ];
 
-        var mappedObjs = apiManager.mapToDate( orderHistoryExample, 'WITHDRAWAL');
+        var mappedObjs = helper.mapToDate( orderHistoryExample, 'WITHDRAWAL');
 
         var basicKeys = ['type', 'info'];
 
@@ -240,7 +173,7 @@ describe('APIManager Test Suite', () => {
             TxId: '85a033ab616a59b6cdcfe41ef6e6f331f96bb21ec59fa5137b2ed8b7ab0c4064',
             CryptoAddress: '13JtkfLoX6gc5AoxNJGGDHhXBtyQBw6VSv' } ];
 
-        var mappedObjs = apiManager.mapToDate( orderHistoryExample, 'DEPOSIT');
+        var mappedObjs = helper.mapToDate( orderHistoryExample, 'DEPOSIT');
 
         var basicKeys = ['type', 'info'];
 
@@ -261,22 +194,27 @@ describe('APIManager Test Suite', () => {
         }
     });
 
-    it('tests getTransactions method', function(done) {
-        this.timeout( 10000 );
-        apiManager.getTransactions( null, (transactions) => {
-            assert.notEqual(undefined, transactions)
+    it('test parseOrderExchange method', function(done) {
+        var testCase1 = "BTC-STRAT";
+        helper.parseOrderExchange( testCase1, (src, dst, success) => {
+            assert.equal( true, success );
+            assert.equal( "BTC", src );
+            assert.equal( "STRAT", dst );
+        });
+
+        var testCase2 = "NMR-ANS";
+        helper.parseOrderExchange( testCase2, (src, dst, success) => {
+            assert.equal( true, success );
+            assert.equal( "NMR", src );
+            assert.equal( "ANS", dst );
+        });
+
+        var testCase3 = "NMR";
+        helper.parseOrderExchange( testCase3, (src, dst, success) => {
+            assert.equal( false, success );
+            assert.equal( null, src );
+            assert.equal( null, dst );
             done();
         });
-    });
-
-    it('tests getTicker method', function(done) {
-        this.timeout( 10000 );
-        apiManager.getTicker( 'BTC-LTC', (price) => {
-            assert.notEqual(undefined, price);
-            assert.notEqual(undefined, price.Bid);
-            assert.notEqual(undefined, price.Ask);
-            assert.notEqual(undefined, price.Last);
-            done();
-        } );
     });
 });

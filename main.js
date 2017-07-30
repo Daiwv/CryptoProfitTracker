@@ -1,4 +1,4 @@
-const {app, BrowserWindow, ipcMain} = require('electron');
+const {app, BrowserWindow, dialog, ipcMain} = require('electron');
 const path = require('path');
 const await = require('await');
 
@@ -33,7 +33,6 @@ app.on('ready', () => {
         backgroundColor: '#fff'
     });
 
-    //mainWindow.setMenu(null);
     mainWindow.loadURL('file://' + __dirname + '/index.html');
 
     mainWindow.on('close', function (event) {
@@ -55,9 +54,15 @@ ipcMain.on('bittrex_auth_add', (event, arg) => {
     });
 });
 
-ipcMain.on('request_balances', (event, arg) => {
+ipcMain.on('request_stored_balances', (event, arg) => {
     dbManager.getBalances((balances) => {
         event.sender.send('reply_balances', balances);
+    });
+});
+
+ipcMain.on('request_balances', (event, arg) => {
+    apiManager.getBalances((result) => {
+        return result;
     });
 });
 
