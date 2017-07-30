@@ -4,4 +4,4 @@ node_modules
 package-lock.json
 *.log*
 config.json
-test/fullOrders.csv
+test/*.csv
