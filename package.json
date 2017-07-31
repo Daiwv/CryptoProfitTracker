@@ -24,8 +24,7 @@
     "spectron": "^3.6.4"
   },
   "scripts": {
-    "test": "electron-mocha",
-    "unit-test": "electron-mocha --grep main.js --invert"
+    "test": "electron-mocha"
   },
   "author": "whitesn",
   "license": "ISC"

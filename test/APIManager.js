@@ -86,4 +86,18 @@ describe('APIManager Test Suite', () => {
             done();
         } );
     });
+
+    it('tests isValidAuth method', function(done) {
+        apiManager.isValidAuth((isValidAuth) => {
+            assert.equal(true, isValidAuth);
+
+            apiManager.API_KEY = "abc";
+            apiManager.isValidAuth((isValidAuth) => {
+                assert.equal(false, isValidAuth);
+                done();
+            });
+        });
+
+
+    });
 });

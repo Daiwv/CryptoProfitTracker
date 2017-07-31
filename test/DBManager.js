@@ -7,6 +7,7 @@ const chaiAsPromised = require('chai-as-promised');
 chai.use(chaiAsPromised);
 const {app} = require('electron');
 const fs = require('fs');
+const await = require('await');
 
 const appPath = path.resolve(__dirname, '../');
 const appDataPath = app.getPath('userData');
@@ -85,7 +86,7 @@ describe('DBManager Test Suite', function() {
         });
     });
 
-    it('checks if metadataDB is configured properly', function(done) {
+    it('checks configure, isConfigured, and getAPI methods', function(done) {
         this.timeout( 3000 );
 
         var api_key = 'abcde';
@@ -101,6 +102,39 @@ describe('DBManager Test Suite', function() {
                 assert.equal( secret_key, b );
                 done();
             });
+        });
+    });
+
+    it('checks synchronize method', function(done) {
+        this.timeout( 3000 );
+
+        var tests = await('tx', 'sync');
+
+        var last_tx_id = "abc";
+        var last_sync = (new Date()).getTime();
+
+        dbm.synchronize( last_sync, last_tx_id, () => {
+            dbm.metadataDB.find({'meta': 'last_tx_id'}, function(err, docs) {
+                if( docs.length == 1 ) {
+                    assert.equal( last_tx_id, docs[0].value );
+                    tests.keep('tx', true);
+                } else {
+                    assert.fail("last_tx_id meta is not equal to 1");
+                }
+            });
+
+            dbm.metadataDB.find({'meta': 'last_sync'}, function(err, docs) {
+                if( docs.length == 1 ) {
+                    assert.equal( last_sync, docs[0].value );
+                    tests.keep('sync', true);
+                } else {
+                    assert.fail("last_sync meta is not equal to 1");
+                }
+            });
+        });
+
+        tests.then((tests) => {
+            done();
         });
     });
 });

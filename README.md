@@ -36,7 +36,7 @@ There will be two tables: **portfolio** and **metadata**
 | api_key | *bittrex api key* |
 | secret_key | *bittrex secret key* |
 | last_sync | *unix long time* |
-| last_tx_uuid | *tx id from bittrex* |
+| last_tx_id | *tx id from bittrex* |
 
 ## Mockup
 

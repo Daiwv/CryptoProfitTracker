@@ -101,14 +101,20 @@ class DBManager {
      * @param {requestCallback} fn - Called when done
      */
      configure( api_key, secret_key, fn ) {
-        var updates = await('api', 'secret');
+        var updates = await('api', 'secret', 'clear_last_tx');
 
-        this.metadataDB.update({'meta': 'api_key'}, {'meta': 'api_key', 'value': api_key},{},() => {
-            updates.keep( 'api', true );
-        });;
+        this.portfolioDB.remove({}, { multi: true }, (err, numRemoved) => {
+            this.metadataDB.update({'meta': 'api_key'}, {'meta': 'api_key', 'value': api_key},{},() => {
+                updates.keep( 'api', true );
+            });;
 
-        this.metadataDB.update({'meta': 'secret_key'}, {'meta': 'secret_key', 'value': secret_key},{},() => {
-            updates.keep( 'secret', true );
+            this.metadataDB.update({'meta': 'secret_key'}, {'meta': 'secret_key', 'value': secret_key},{},() => {
+                updates.keep( 'secret', true );
+            });
+
+            this.metadataDB.update({'meta': 'last_tx_id'}, {'meta': 'last_tx_id', 'value': 0},{},() => {
+                updates.keep( 'clear_last_tx', true );
+            });
         });
 
         updates.then(function(updates) {
@@ -143,7 +149,7 @@ class DBManager {
      /*
       * @param {Date} last_sync - The latest time of synchronization to Bittrex API
       * @param {String} last_tx_id - The last transaction ID sync'd
-      * @param {requestCallback} fn
+      * @param {requestCallback} fn - Call if done
       */
      synchronize( last_sync, last_tx_id, fn ) {
         var updates = await('sync', 'tx');
@@ -160,6 +166,19 @@ class DBManager {
             fn();
         });
      }
+
+     /*
+      * @param{requestCallback} fn - Return the Last TX ID
+      */
+      getLastTxID( fn ) {
+          this.metadataDB.find({'meta': 'last_tx_id'}, function(err,docs) {
+              if( docs.length == 1 ){
+                  fn( docs[0].value );
+              } else {
+                  fn( 0 );
+              }
+          });
+      }
 
      /*
       * @param {requestCallback} fn - return the api_key and secret_key

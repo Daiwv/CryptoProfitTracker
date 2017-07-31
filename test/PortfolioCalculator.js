@@ -2,6 +2,7 @@ const Application = require('spectron').Application
 const assert = require('assert');
 const path = require('path');
 const chai = require('chai');
+const chai_assert = chai.assert;
 const expect = chai.expect;
 const chaiAsPromised = require('chai-as-promised');
 chai.use(chaiAsPromised);
@@ -66,8 +67,9 @@ describe('PortfolioCalculator Test Suite' , () => {
             }
         ];
 
-        balances = pc.transactionsToPortfolio([], sampleTransactions);
-        var balance = _.find(balances, { coin: "BTC"});
+        var retarg = pc.transactionsToPortfolio([], sampleTransactions);
+        assert.equal( "SUCCESS", retarg.status );
+        var balance = _.find(retarg.val, { coin: "BTC"});
         assert.notEqual( undefined, balance );
         assert.equal( 30, balance['amount'] );
     });;
@@ -75,7 +77,7 @@ describe('PortfolioCalculator Test Suite' , () => {
     it('tests transactionsToPortfolio WITHDRAWAL', function() {
         var sampleTransactions = [
             {
-                'time': new Date("1970-01-01T06:00:00.0"),
+                'time': new Date(1),
                 'type': 'DEPOSIT',
                 'info':
                 {
@@ -85,7 +87,7 @@ describe('PortfolioCalculator Test Suite' , () => {
                 }
             },
             {
-                'time': new Date("1970-01-01T07:00:00.0"),
+                'time': new Date(2),
                 'type': 'WITHDRAWAL',
                 'info':
                 {
@@ -97,10 +99,110 @@ describe('PortfolioCalculator Test Suite' , () => {
             }
         ];
 
-        balances = pc.transactionsToPortfolio([], sampleTransactions);
+        var retarg = pc.transactionsToPortfolio([], sampleTransactions);
+        assert.equal( "SUCCESS", retarg.status );
+        var balances = retarg.val;
         var balance = _.find(balances, { coin: "BTC"});
         assert.notEqual( undefined, balance );
         assert.equal( 4, balance['amount'] );
+    });
+
+    it('tests transactionsToPortfolio ORDER LIMIT BUY', function() {
+        var sampleTransactions = [
+            {
+                time: new Date(1),
+                type: "DEPOSIT",
+                info:
+                {
+                    Id: "1",
+                    Currency: "BTC",
+                    Amount: 10,
+                }
+            },
+            {
+                time: new Date(2),
+                type: "ORDER",
+                info:
+                {
+                    OrderUuid: "2",
+                    Exchange: "BTC-ANS",
+                    OrderType: "LIMIT_BUY",
+                    Quantity: 10,
+                    QuantityRemaining: 0,
+                    Commission: 0.1,
+                    Price: 2,
+                    PricePerUnit: 0.2
+                }
+            }
+        ];
+
+        var retarg = pc.transactionsToPortfolio([], sampleTransactions);
+        assert.equal( "SUCCESS", retarg.status );
+        var balances = retarg.val;
+
+        var BTCBalance = _.find(balances, { coin: "BTC" });
+        assert.equal( 7.9, BTCBalance.amount );
+
+        var ANSBalance = _.find(balances, { coin: "ANS" });
+        assert.equal( 10, ANSBalance.amount );
+    });
+
+    it('tests transactionsToPortfolio ORDER LIMIT SELL', function() {
+        var sampleTransactions = [
+            {
+                time: new Date(1),
+                type: "DEPOSIT",
+                info:
+                {
+                    Id: "1",
+                    Currency: "BTC",
+                    Amount: 10,
+                }
+            },
+            {
+                time: new Date(2),
+                type: "ORDER",
+                info:
+                {
+                    OrderUuid: "2",
+                    Exchange: "BTC-ANS",
+                    OrderType: "LIMIT_BUY",
+                    Quantity: 10,
+                    QuantityRemaining: 0,
+                    Commission: 0.1,
+                    Price: 2,
+                    PricePerUnit: 0.2
+                }
+            },
+            {
+                time: new Date(2),
+                type: "ORDER",
+                info:
+                {
+                    OrderUuid: "2",
+                    Exchange: "BTC-ANS",
+                    OrderType: "LIMIT_SELL",
+                    Quantity: 5,
+                    QuantityRemaining: 0,
+                    Commission: 0.1,
+                    Price: 50
+                }
+            }
+        ];
+
+        // First, BTC: 10
+        // Second, BTC: 10 - (2 + 0.1) = 7.9 | ANS: 10
+        // Third, BTC: 7.9 + (50 - 0.1) = 57.8 | ANS: 10 - 5 = 5
+
+        var retarg = pc.transactionsToPortfolio([], sampleTransactions);
+        assert.equal( "SUCCESS", retarg.status );
+        var balances = retarg.val;
+
+        var BTCBalance = _.find(balances, { coin: "BTC" });
+        assert.equal( 57.8, BTCBalance.amount );
+
+        var ANSBalance = _.find(balances, { coin: "ANS" });
+        assert.equal( 5, ANSBalance.amount );
     });
 
     it('tests getTransactions method with nonexistent lastId (simulating unfetched older history from bittrex)', function(done) {
@@ -129,19 +231,85 @@ describe('PortfolioCalculator Test Suite' , () => {
         });
     });
 
-    it.only('tests transactionsToPortfolio method with CSV', function(done) {
+    it('tests getTransactions method with lastId', function(done) {
+        this.timeout( 5000 );
+
+        var depositHistory = [
+            {
+                type: 'DEPOSIT',
+                time: new Date(0),
+                info: {
+                    Id: "abcde",
+                    Currency: "BTC",
+                    Amount: 10
+                }
+            },
+            {
+                type: 'DEPOSIT',
+                time: new Date(1),
+                info: {
+                    Id: "fghij",
+                    Currency: "ETH",
+                    Amount: 10
+                }
+            },
+            {
+                type: 'DEPOSIT',
+                time: new Date(2),
+                info: {
+                    Id: "klmno",
+                    Currency: "ANS",
+                    Amount: 10
+                }
+            },
+        ];
+
+        pc.getTransactions( "abcde", depositHistory, [], [], (retarg) => {
+            assert.notEqual( "NOT_SYNCED", retarg.status );
+            depositHistory.splice(0, 1);
+
+            var transactions = retarg.val;
+            assert.equal( 2, transactions.length );
+
+            var depositDateZero = _.find( transactions, {time: new Date(0)} );
+            assert.equal( undefined, depositDateZero );
+
+
+            var depositETH = _.find( transactions, {time: new Date(1)} );
+            assert.notEqual( undefined, depositETH );
+            assert.equal( 10, depositETH.info.Amount );
+
+            var depositANS = _.find( transactions, {time: new Date(2)} );
+            assert.notEqual( undefined, depositANS );
+            assert.equal( 10, depositANS.info.Amount )
+
+            done();
+        });
+    });
+
+    it('tests transactionsToPortfolio method with CSV', function(done) {
         this.timeout( 10000 );
         var histories = await('order', 'withdrawal', 'deposit');
 
-        pc.getWithdrawalHistory( apiManager, (history) => {
-            histories.keep('withdrawal', history);
-        });
+        // EMPTY WITHDRAWAL HISTORY
+        var withdrawalHistory = [];
+        histories.keep('withdrawal', withdrawalHistory);
 
-        pc.getDepositHistory( apiManager, (history) => {
-            histories.keep('deposit', history);
+        // DEPOSIT INITIAL BTC
+        var depositHistory = [];
+        depositHistory.push({
+            type: "DEPOSIT",
+            time: new Date(0),
+            info: {
+                Id: 1,
+                Currency: "BTC",
+                Amount: 1
+            }
         });
+        histories.keep('deposit', depositHistory);
 
-        pc.getOrderHistoryCSV( appPath + "/test/fullOrders_utf8.csv", (history) => {
+        // SAMPLE ORDER CSV FOR TESTING
+        pc.getOrderHistoryCSV( appPath + "/test/fullOrders.csv", (history) => {
             if( history.status == "SUCCESS" ) {
                 histories.keep('order', history.val);
             } else {
@@ -151,16 +319,36 @@ describe('PortfolioCalculator Test Suite' , () => {
 
         histories.then(function(histories) {
             var lastId = 0;
-            pc.getTransactions( lastId, histories.deposit, histories.withdrawal, histories.order, (transactions) => {
-                var balances = pc.transactionsToPortfolio( [], transactions.val );
+            pc.getTransactions( lastId, histories.deposit, histories.withdrawal, histories.order, (retarg) => {
+                var transactions = retarg.val;
+                var balances;
+
+                assert.doesNotThrow(function() {
+                    var retarg = pc.transactionsToPortfolio( [], transactions );
+                    balances = retarg.val;
+                }, function(err) {
+                }, "Throw while calling transactionsToPortfolio()");
+
                 assert.notEqual( null, balances );
+
+                var ans, etc, btc;
+
+                ans = _.find( balances, {coin: "ANS"} );
+                etc = _.find( balances, {coin: "ETC"} );
+                btc = _.find( balances, {coin: "BTC"} );
+
+                chai_assert.closeTo( 5.84346542, etc.amount, 0.000001 );
+                chai_assert.closeTo( 0, ans.amount, 0.000001 );
+                // Manually calculated, should change this using metamorphic testing?
+                chai_assert.closeTo( 0.98268999, btc.amount, 0.000001 );
+
                 done();
             });
         });
     });
 
-    it('tests getOrderHistoryCSV method', function(done) {
-        var orderHistory = pc.getOrderHistoryCSV( appPath + "/test/fullOrders_utf8.csv", (history) => {
+    it.only('tests getOrderHistoryCSV method', function(done) {
+        var orderHistory = pc.getOrderHistoryCSV( appPath + "/test/fullOrders.csv", (history) => {
             assert.notEqual( undefined, history );
             assert.notEqual( null, history );
             assert.equal( true, history.status === "SUCCESS" );
@@ -170,6 +358,12 @@ describe('PortfolioCalculator Test Suite' , () => {
 
             keys.forEach((key) => {
                 assert.notEqual( undefined, sampleHistory[key], "Undefined for key: " + key );
+            });
+
+            var keyWithNumericValue = ['Quantity', 'QuantityRemaining', 'Commission', 'Price', 'PricePerUnit'];
+
+            keyWithNumericValue.forEach((key) => {
+                assert.notEqual( true, isNaN(sampleHistory[key]), "Not a number for key : " + key + ", with value : " + sampleHistory[key] );
             });
 
             done();
@@ -198,7 +392,8 @@ describe('PortfolioCalculator Test Suite' , () => {
             }
         ];
 
-        var balances = pc.transactionsToPortfolio( [], depositTransactions );
+        var retarg = pc.transactionsToPortfolio( [], depositTransactions );
+        var balances = retarg.val;
 
         var BTCBal = _.find( balances, {coin: 'BTC'} );
         assert.equal( BTCBal.amount, 100 );
@@ -269,7 +464,8 @@ describe('PortfolioCalculator Test Suite' , () => {
             },
         ];
 
-        var balances = pc.transactionsToPortfolio( [], transactions );
+        var retarg = pc.transactionsToPortfolio( [], transactions );
+        var balances = retarg.val;
 
         var ANSBal1 = _.find( balances, {coin: "ANS", market: "BTC-ANS"} );
         assert.notEqual( undefined, ANSBal1 );
@@ -280,5 +476,47 @@ describe('PortfolioCalculator Test Suite' , () => {
         assert.notEqual( undefined, ANSBal2 );
         assert.equal( ANSBal2.amount, 50 );
         assert.equal( ANSBal2.market, "ETH-ANS");
+    });
+
+    it('tests isBalanceSynced method', function(done) {
+        this.timeout( 5000 );
+
+        var ansBalance = 150.1023910;
+        var btcBalance = 0.03198042;
+
+        var apiManagerSimulator = {};
+
+        apiManagerSimulator.getBalances = function(fn) {
+            fn([
+                {
+                    Currency: "ANS",
+                    Balance: ansBalance
+                },
+                {
+                    Currency: "BTC",
+                    Balance: btcBalance
+                }
+            ]);
+        };
+
+        var newBalances = [
+            {
+                coin: "ANS",
+                market: "BTC-ANS",
+                buy_rate: 1,
+                amount: ansBalance
+            },
+            {
+                coin: "BTC",
+                market: "BTC-USDT",
+                buy_rate: 1,
+                amount: btcBalance
+            }
+        ];
+
+        pc.isBalanceSynced(apiManagerSimulator, newBalances, (isBalanceSynced) => {
+            assert.equal( true, isBalanceSynced );
+            done();
+        });
     });
 });

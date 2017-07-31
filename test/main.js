@@ -1,9 +1,10 @@
-var Application = require('spectron').Application
-var assert = require('assert');
-var path = require('path');
-var electron = require('electron');
+const Application = require('spectron').Application
+const assert = require('assert');
+const path = require('path');
+const electron = require('electron');
 
 const appPath = path.resolve(__dirname, '../');
+const electronPath = path.resolve(__dirname, '../node_modules/.bin/electron');
 
 describe('application launch', function () {
     this.timeout(10000);
@@ -11,8 +12,8 @@ describe('application launch', function () {
 
     before(function () {
         app = new Application({
-            path: electron,
-            args: appPath
+            path: electronPath,
+            args: [appPath]
         });
 
         return app.start();

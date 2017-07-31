@@ -39,10 +39,12 @@ class APIManager {
     }
 
     /*
-     * @return {Bool} Return TRUE if API key and Secret key is valid
+     * @param {requestCallback} Return TRUE if API key and Secret key is valid
      */
-    isValidAuth() {
-
+    isValidAuth( fn ) {
+        this.call('/account/getbalances', (result) => {
+            fn( result != undefined );
+        });
     }
 
     /*

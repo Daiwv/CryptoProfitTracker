@@ -56,9 +56,11 @@ class PortfolioCalculator {
                 data.OrderType = data.Type;
                 delete( data.Type );
                 data.QuantityRemaining = 0;
-                data.Commission = data.CommissionPaid;
+                data.Commission = parseFloat(data.CommissionPaid);
                 delete( data.CommissionPaid );
-                data.PricePerUnit = data.Price / data.Quantity;
+                data.Price = parseFloat(data.Price);
+                data.Quantity = parseFloat(data.Quantity);
+                data.PricePerUnit = parseFloat(data.Limit);
                 orderHistory.push( data );
             }).on("end", function(){
                 orderHistory = helper.mapToDate( orderHistory, "ORDER" );
@@ -141,7 +143,6 @@ class PortfolioCalculator {
                       val: null
                     });
                 }
-
             } while( true );
         }
 
@@ -156,15 +157,25 @@ class PortfolioCalculator {
      * @param {Object} transactions - The transactions to be applied
      * @return {Object} The final balances with the buy rate
      *
-     * Balance Entry Example
-     * [{ 'coin': 'ANS', 'market': 'BTC-ANS', 'buy_rate': ..., 'amount': '' }];
+     * Return Example
+     * {
+     *      status: <SUCCESS|NEED_SYNC>,
+     *      val: [{ 'coin': 'ANS', 'market': 'BTC-ANS', 'buy_rate': ..., 'amount': ''}]
+     * }
      *
-     * Transactions entries example see getTransactions
+     * Transaction entries example see getTransactions
      */
     transactionsToPortfolio( balances, transactions ) {
+        function retNeedSync() {
+            return {
+                status: "NEED_SYNC",
+                val: null
+            };
+        }
+
         transactions.forEach((transaction) => {
             var tx_info = transaction['info'];
-            var coinName = tx_info['Currency'];
+            var coinName = tx_info['Currency']; // only for Withdrawal / Deposit
             var amount = tx_info['Amount'];
             var transactionType = transaction['type'];
 
@@ -173,34 +184,48 @@ class PortfolioCalculator {
             case 'WITHDRAWAL':
                 var amountWithdrawn = parseFloat(amount);
                 var txCost = parseFloat(tx_info['TxCost']);
+                var totalWithdrawn = amountWithdrawn + txCost;
 
-                if( coinName == "BTC" ) {
-                    var balance = _.find( balances, {coin: coinName, market: "BTC-USDT" } );
+                if( coinName == "BTC" || coinName == "ETH" ) {
+                    market = (coinName == "BTC") ? "BTC-USDT" : "BTC-ETH";
 
-                    balance['amount'] -= amountWithdrawn;
-                    balance['amount'] -= txCost;
-                } else if( coinName == "ETH" ) {
-                    var balance = _.find( balances, {coin: coinName, market: "BTC-ETH" } );
+                    var balance = _.find( balances, {coin: coinName, market: market} );
 
-                    balance['amount'] -= amountWithdrawn;
-                    balance['amount'] -= txCost;
+                    var b = (balance != undefined) ? balance.amount : 0;
+
+                    if( totalWithdrawn > b ) {
+                        console.log("FOUND IMBALANCED LEDGER, CHECK");
+                        console.log( transaction );
+                        return retNeedSync();
+                    }
+
+                    balance.amount -= totalWithdrawn;
                 } else {
                     var balanceBTCMarket = _.find( balances, {coin: coinName, market: "BTC-" + coinName } );
 
                     var balanceETHMarket = _.find( balances, {coin: coinName, market: "ETH-" + coinName } );
 
-                    if( balanceBTCMarket != undefined && balanceBTCMarket.amount > 0 ) {
-                        if( (balanceBTCMarket - amountWithdrawn) < 0 ) {
+                    var b1 = (balanceBTCMarket != undefined) ? balanceBTCMarket.amount : 0;
+
+                    var b2 = (balanceETHMarket != undefined) ? balanceETHMarket.amount : 0;
+
+                    if( b1 + b2 < totalWithdrawn ) {
+                        return retNeedSync();
+                    }
+
+                    if( b1 > 0 ) {
+                        if( (b1 - totalWithdrawn) < 0 ) {
+                            var leftover = totalWithdrawn - balanceBTCMarket.amount;
                             balanceBTCMarket.amount = 0;
-                            var leftover = amountWithdrawn - balanceBTCMarket.amount;
                             balanceETHMarket.amount -= leftover;
                         } else {
-                            balanceBTCMarket.amount -= amountWithdrawn;
+                            balanceBTCMarket.amount -= totalWithdrawn;
                         }
-                    } else if( balanceETHMarket != undefined && balanceETHMarket.amount > 0 ) {
-                        balanceETHMarket.amount -= amountWithdrawn;
+                    } else if( b2 > 0 ) {
+                        balanceETHMarket.amount -= totalWithdrawn;
                     }
                 }
+
                 break;
 
             case 'DEPOSIT':
@@ -240,17 +265,24 @@ class PortfolioCalculator {
                 case "LIMIT_SELL":
                     var dstBalance = _.find(balances, { coin : exchangeDestination, market: market });
 
-                    dstBalance['amount'] -= quantity;
+                    var b = (dstBalance != undefined) ? dstBalance.amount : 0;
 
+                    if( b < quantity ) {
+                        console.log("FOUND IMBALANCED LEDGER, CHECK");
+                        console.log( transaction );
+                        return retNeedSync();
+                    }
+
+                    dstBalance.amount -= quantity;
 
                     switch( exchangeSource ) {
-                        case "BTC":
-                            market = "BTC-USDT";
-                            break;
+                    case "BTC":
+                        market = "BTC-USDT";
+                        break;
 
-                        case "ETH":
-                            market = "BTC-ETH";
-                            break;
+                    case "ETH":
+                        market = "BTC-ETH";
+                        break;
                     }
 
                     var srcBalance = _.find(balances, { coin : exchangeSource, market: market });
@@ -302,20 +334,76 @@ class PortfolioCalculator {
                     }
 
                     var srcBalance = _.find(balances, { coin: exchangeSource, market: market });
-                    srcBalance['amount'] -= (tx_info['Price'] + tx_info['Commission']);
+
+                    var b = (srcBalance != undefined) ? srcBalance.amount : 0;
+
+                    if( b < tx_info.Price + tx_info.Commission ) {
+                        srcBalance.amount -= (tx_info.Price + tx_info.Commission);
+                        console.log("FOUND IMBALANCED LEDGER, CHECK");
+                        console.log( transaction );
+                        return retNeedSync();
+                    } else {
+                        srcBalance.amount -= (tx_info.Price + tx_info.Commission);
+                    }
+
                     break;
                 }
 
                 break;
             }
-
-            console.log( transaction );
-            console.log( balances );
-            console.log( "============" ) ;
         });
 
-        return balances;
+        return {
+            status: "SUCCESS",
+            val: balances
+        };
     }
+
+    /*
+     * Test if the balances is synced to Bittrex data
+     * @param {Class} apiManager - The API Manager
+     * @param {Array} newBalances - The calculated balance
+     * @param {requestCallback} fn - return True or False
+     */
+     isBalanceSynced( apiManager, newBalances, fn ) {
+         apiManager.getBalances((balances) => {
+             for( var i = 0; i < balances.length; i++ ) {
+                 var balance = balances[i];
+
+                 var bal = balance.Balance;
+                 var coin = balance.Currency;
+
+                 if( bal != 0 ) {
+                     var total = 0;
+
+                     if( coin == "BTC" || coin == "ETH" ) {
+                         var b = _.find( newBalances, {coin: coin} );
+                         total = b.amount;
+                     } else {
+                         var btcMarketBal = _.find( newBalances, {coin: coin, market: "BTC-" + coin} );
+
+                         var ethMarketBal = _.find( newBalances, {coin: coin, market: "ETH-" + coin} );
+
+                         total += (btcMarketBal != undefined) ? btcMarketBal.amount : 0;
+
+                         total += (ethMarketBal != undefined) ? ethMarketBal.amount : 0;
+                     }
+
+                     total = parseFloat(total.toFixed(8));
+                     bal = parseFloat(bal.toFixed(8));
+
+                     if( total != bal ) {
+                         fn( false );
+                         break;
+                     } else {
+                         if( i == balances.length - 1 ) {
+                             fn( true );
+                         }
+                     }
+                 }
+             }
+         });
+     }
 };
 
 module.exports = PortfolioCalculator;

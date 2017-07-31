@@ -1,4 +1,5 @@
 const {ipcRenderer} = require('electron');
+const {dialog} = require('electron').remote;
 const await = require('await');
 const moment = require('moment');
 const _ = require('lodash');
@@ -27,12 +28,25 @@ htmls.then(function(htmls) {
 // -----------------------------------------------------------
 
 $("#homeBtn").click(function() {
+    clearAllListener();
     setupPortfolioPage();
 });
 
 $("#settingBtn").click(function() {
+    clearAllListener();
     setupSettingPage();
 });
+
+function clearAllListener() {
+    var channels = [
+        "reply_balances",
+        "reply_update_portfolio",
+        "reply_ticker",
+        "reply_api"
+    ];
+
+    ipcRenderer.removeAllListeners(channels);
+}
 
 function setupPortfolioPage() {
 
@@ -41,12 +55,12 @@ function setupPortfolioPage() {
         $(".cpt-last-sync").html( timeLabel );
     }
 
-    function refreshBalances(oldBalances) {
+    function refreshBalances(newBalances) {
         function findDeletedCoins(oldBalances) {
             var deletedCoins = [];
 
             oldBalances.forEach((oldBalance) => {
-                if( _.find(balances, oldBalance) == undefined ) {
+                if( _.find(newBalances, oldBalance) == undefined ) {
                     deletedCoins.push(oldBalance.coin);
                 }
             });
@@ -57,7 +71,7 @@ function setupPortfolioPage() {
         function createCoinEntry( balance ) {
             var coinName = balance.coin;
             var amt = balance.amount;
-            var buyRate = parseFloat(balance.buy_rate).toExponential(3);
+            var buyRate = (balance.buy_rate != null) ? parseFloat(balance.buy_rate).toExponential(3) : 0;
             var entry = "";
 
             entry += "<td>" + coinName + "</td>";
@@ -70,6 +84,8 @@ function setupPortfolioPage() {
             return entry;
         }
 
+        var oldBalances = balances;
+        balances = newBalances;
         var deletedCoins = findDeletedCoins(oldBalances);
 
         deletedCoins.forEach((deletedCoin) => {
@@ -83,7 +99,7 @@ function setupPortfolioPage() {
             var buyRate;
 
             if( balance.buy_rate == null ) {
-                buyRate = 1;
+                buyRate = 0;
             } else {
                 buyRate = parseFloat(balance.buy_rate).toExponential(3);
             }
@@ -157,7 +173,8 @@ function setupPortfolioPage() {
 
         if( amount > 0 ) {
             var profit = (curRate - buyRate) / buyRate;
-            var profitDisplay = (profit * 100).toFixed(2) + " %";
+            var profitDisplay = (isFinite(profit)) ? (profit * 100).toFixed(2) + " %" : "- %";
+
             if( profit < 0 ) {
                 profitDisplay = "<label class=\"cpt-profit-negative\">" + profitDisplay + "</label>";
             } else {
@@ -218,20 +235,20 @@ function setupPortfolioPage() {
 
     // Balances stored from last fetch from the DB
     ipcRenderer.on('reply_balances', (event,arg) => {
-        var oldBalances = balances.slice();
-        balances = arg;
-        refreshBalances( oldBalances );
+        refreshBalances( arg );
         updateTicker();
         refreshSyncTime();
     });
 
     // Current Balance on Bittrex
     ipcRenderer.on('reply_update_portfolio', (event,arg) => {
-        var oldBalances = balances.slice();
-        balances = arg;
-        refreshBalances( oldBalances );
-        updateTicker();
-        refreshSyncTime();
+        if( arg.status == "SUCCESS" ) {
+            refreshBalances( arg.val );
+            updateTicker();
+            refreshSyncTime();
+        } else if( arg.status == "NEED_SYNC" ) {
+            dialog.showErrorBox("DATA NEED_SYNC", "The Data is not in Sync with Bittrex History, please feed the CSV from Bittrex's Order History.");
+        }
     });
 
     // Current Ticker (Last Bid) on Bittrex
@@ -261,6 +278,16 @@ function setupSettingPage() {
             };
 
             ipcRenderer.send('bittrex_auth_add', bittrex_auth);
+        });
+
+        $(".cpt-choose-csv").click(function() {
+            var filePath = dialog.showOpenDialog({properties: ['openFile']});
+            setupPortfolioPage();
+
+            //console.log( filePath[0] );
+            filePath = filePath[0];
+
+            ipcRenderer.send('initial_csv_sync', filePath);
         });
     }
 
