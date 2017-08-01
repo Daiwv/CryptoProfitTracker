@@ -166,13 +166,11 @@ class PortfolioCalculator {
      * Transaction entries example see getTransactions
      */
     transactionsToPortfolio( balances, transactions ) {
-        // Update to SUCCESS when all transactions are processed correctly
         var retarg = {
-            status: "NEED_SYNC",
-            val: null
+            status: "SUCCESS",
+            val: balances
         };
 
-        //transactions.forEach((transaction) => {
         for( var transaction of transactions ) {
             var tx_info = transaction['info'];
             var coinName = tx_info['Currency']; // only for Withdrawal / Deposit
@@ -354,14 +352,12 @@ class PortfolioCalculator {
             }
 
             if( foundNotSync ) {
-                break;
-            }
-
-            if( transaction == transactions[transactions.length - 1] ) {
                 retarg = {
-                    status: "SUCCESS",
-                    val: balances
+                    status: "NEED_SYNC",
+                    val: null
                 };
+
+                break;
             }
         }
 
@@ -404,11 +400,11 @@ class PortfolioCalculator {
                      if( total != bal ) {
                          fn( false );
                          break;
-                     } else {
-                         if( i == balances.length - 1 ) {
-                             fn( true );
-                         }
                      }
+                 }
+
+                 if( i == balances.length - 1 ) {
+                     fn( true );
                  }
              }
          });

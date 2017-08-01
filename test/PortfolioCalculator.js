@@ -347,7 +347,7 @@ describe('PortfolioCalculator Test Suite' , () => {
         });
     });
 
-    it.only('tests getOrderHistoryCSV method', function(done) {
+    it('tests getOrderHistoryCSV method', function(done) {
         var orderHistory = pc.getOrderHistoryCSV( appPath + "/test/fullOrders.csv", (history) => {
             assert.notEqual( undefined, history );
             assert.notEqual( null, history );
