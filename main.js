@@ -26,7 +26,7 @@ app.on('ready', () => {
         apiManager = new APIManager( dbManager, () => {
             mainWindow = new BrowserWindow({
                 height: 600,
-                width: 900,
+                width: 980,
                 backgroundColor: '#fff'
             });
 
@@ -186,11 +186,12 @@ ipcMain.on('update_ticker', (event, arg) => {
     arg.forEach((entry) => {
         if( entry.coin != "BTC" ) {
             // TEMPORARY HACK, SHOULD STORE MARKET ON PROCESSING TRANSACTIONS
-            var market = "BTC-" + entry.coin;
+            var market = entry.market;
 
             apiManager.getTicker( market, function(result) {
                 if( result != undefined ) {
-                    result["Coin"] = entry.coin;
+                    result.Coin = entry.coin;
+                    result.Market = market;
                     event.sender.send("reply_ticker", result);
                 }
             });

@@ -46,9 +46,7 @@ Created using [creately.com](https://creately.com/)
 
 ## TODO
 
-- Add Market Column because the rate can be different between markets (BTC / ETH)
-
-- Find a Bug where the ledger was imbalanced perhaps due to wrong timeframe between Deposits / Withdrawal / Order? 
+- Find a Bug where the ledger was imbalanced perhaps due to wrong timeframe between Deposits / Withdrawal / Order?
 
 - Set BTC Current Rate to the BTC-USDT Market.
 
