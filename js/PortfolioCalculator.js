@@ -52,7 +52,9 @@ class PortfolioCalculator {
 
         if( fs.existsSync(csvPath) ) {
             csv.fromPath(csvPath, {headers: true}).on("data", function(data) {
-                data.Closed += "+00:00";
+                // data.Opened += "+00:00";
+                // data.Closed += "+00:00";
+                data.TimeStamp = data.Opened + "+00:00";
                 data.OrderType = data.Type;
                 delete( data.Type );
                 data.QuantityRemaining = 0;
@@ -103,13 +105,31 @@ class PortfolioCalculator {
     * These (filtered) keys can be seen on helper.mapToDate method.
     */
     getTransactions( lastId, depositHistory, withdrawalHistory, orderHistory, fn ) {
-        var combinedHistories = orderHistory.concat(withdrawalHistory).concat(depositHistory);
+        var nonOrderHistory = withdrawalHistory.concat(depositHistory);
+        var combinedHistories = [];
 
-        combinedHistories.sort(function compare(a,b) {
+        nonOrderHistory.sort(function compare(a,b) {
             var dateA = a.time;
             var dateB = b.time;
             return dateA - dateB;
         });
+
+        // Bittrex Does not give second and milliseconds timeframe in datetime, some tx can get ordered wrongly
+        while( nonOrderHistory.length && orderHistory.length ) {
+            if( nonOrderHistory[0].time <= orderHistory[0].time ) {
+                combinedHistories.push(nonOrderHistory.shift());
+            } else {
+                combinedHistories.push(orderHistory.shift());
+            }
+        }
+
+        while( nonOrderHistory.length ) {
+            combinedHistories.push(nonOrderHistory.shift());
+        }
+
+        while( orderHistory.length ) {
+            combinedHistories.push(orderHistory.shift());
+        }
 
         if( lastId != 0 ) {
             do {
@@ -154,7 +174,7 @@ class PortfolioCalculator {
 
     /*
      * @param {Object} balances - The current portfolio, empty array [] if none
-     * @param {Object} transactions - The transactions to be applied
+     * @param {Object} transactions - The transactions to be ap plied
      * @return {Object} The final balances with the buy rate
      *
      * Return Example

@@ -32,7 +32,7 @@ module.exports = {
 
         switch( type ) {
             case 'ORDER':
-            timeKey = "Closed";
+            timeKey = "TimeStamp";
             filteredKeys = ['OrderUuid', 'Exchange', 'OrderType', 'Quantity', 'QuantityRemaining', 'Commission', 'Price', 'PricePerUnit'];
             break;
 

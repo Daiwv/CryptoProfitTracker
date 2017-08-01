@@ -129,20 +129,22 @@ class DBManager {
       */
      updatePortfolio( balances, fn ) {
          this.portfolioDB.remove({}, { multi: true }, (err, numRemoved) => {
-             balances.forEach((balance) => {
-                 var portDB = this.portfolioDB;
-                 this.portfolioDB.find({'coin': balance.coin}, function(err, docs) {
-                     if( docs.length == 1 ) {
-                         portDB.update({'coin': balance.coin}, balance);
-                     } else {
-                         portDB.insert( balance );
-                     }
-                 });
+             if( balances != null ) {
+                 balances.forEach((balance) => {
+                     var portDB = this.portfolioDB;
+                     this.portfolioDB.find({'coin': balance.coin}, function(err, docs) {
+                         if( docs.length == 1 ) {
+                             portDB.update({'coin': balance.coin}, balance);
+                         } else {
+                             portDB.insert( balance );
+                         }
+                     });
 
-                 if( balance == balances[balances.length - 1]) {
-                     return fn();
-                 }
-            });
+                     if( balance == balances[balances.length - 1]) {
+                         return fn();
+                     }
+                });
+             }
          });
     }
 

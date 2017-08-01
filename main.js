@@ -45,8 +45,10 @@ ipcMain.on('bittrex_auth_add', (event, arg) => {
     dbManager.configure( arg.api_key, arg.secret_key, () => {
         apiManager.refreshAPI(() => {
             apiManager.isValidAuth((isValidAuth) => {
-                if(!isValidAuth) {
+                if( !isValidAuth ) {
                     console.log("IS INVALID AUTH, PLEASE CONFIGURE CORRECT ONE");
+                } else {
+                    console.log("AUTH IS VALID, PROCEED");
                 }
             });
         });
@@ -93,8 +95,6 @@ ipcMain.on('initial_csv_sync', (event, arg) => {
                     var balances = [];
 
                     var newBalancesInfo = portfolioCalculator.transactionsToPortfolio( balances, transactions );
-
-                    console.log( newBalancesInfo );
 
                     var newBalances = newBalancesInfo.val;
 
