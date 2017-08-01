@@ -166,18 +166,19 @@ class PortfolioCalculator {
      * Transaction entries example see getTransactions
      */
     transactionsToPortfolio( balances, transactions ) {
-        function retNeedSync() {
-            return {
-                status: "NEED_SYNC",
-                val: null
-            };
-        }
+        // Update to SUCCESS when all transactions are processed correctly
+        var retarg = {
+            status: "NEED_SYNC",
+            val: null
+        };
 
-        transactions.forEach((transaction) => {
+        //transactions.forEach((transaction) => {
+        for( var transaction of transactions ) {
             var tx_info = transaction['info'];
             var coinName = tx_info['Currency']; // only for Withdrawal / Deposit
             var amount = tx_info['Amount'];
             var transactionType = transaction['type'];
+            var foundNotSync = false;
 
             // Process the transaction information
             switch( transaction['type'] ) {
@@ -194,9 +195,9 @@ class PortfolioCalculator {
                     var b = (balance != undefined) ? balance.amount : 0;
 
                     if( totalWithdrawn > b ) {
-                        console.log("FOUND IMBALANCED LEDGER, CHECK");
-                        console.log( transaction );
-                        return retNeedSync();
+                        console.log("FOUND IMBALANCED LEDGER");
+                        foundNotSync = true;
+                        break;
                     }
 
                     balance.amount -= totalWithdrawn;
@@ -210,7 +211,9 @@ class PortfolioCalculator {
                     var b2 = (balanceETHMarket != undefined) ? balanceETHMarket.amount : 0;
 
                     if( b1 + b2 < totalWithdrawn ) {
-                        return retNeedSync();
+                        console.log("FOUND IMBALANCED LEDGER, CHECK");
+                        foundNotSync = true;
+                        break;
                     }
 
                     if( b1 > 0 ) {
@@ -268,9 +271,9 @@ class PortfolioCalculator {
                     var b = (dstBalance != undefined) ? dstBalance.amount : 0;
 
                     if( b < quantity ) {
-                        console.log("FOUND IMBALANCED LEDGER, CHECK");
-                        console.log( transaction );
-                        return retNeedSync();
+                        console.log("FOUND IMBALANCED LEDGER");
+                        foundNotSync = true;
+                        break;
                     }
 
                     dstBalance.amount -= quantity;
@@ -339,24 +342,30 @@ class PortfolioCalculator {
 
                     if( b < tx_info.Price + tx_info.Commission ) {
                         srcBalance.amount -= (tx_info.Price + tx_info.Commission);
-                        console.log("FOUND IMBALANCED LEDGER, CHECK");
-                        console.log( transaction );
-                        return retNeedSync();
+                        console.log("FOUND IMBALANCED LEDGER");
+                        foundNotSync = true;
+                        break;
                     } else {
                         srcBalance.amount -= (tx_info.Price + tx_info.Commission);
                     }
 
                     break;
                 }
+            }
 
+            if( foundNotSync ) {
                 break;
             }
-        });
 
-        return {
-            status: "SUCCESS",
-            val: balances
-        };
+            if( transaction == transactions[transactions.length - 1] ) {
+                retarg = {
+                    status: "SUCCESS",
+                    val: balances
+                };
+            }
+        }
+
+        return retarg;
     }
 
     /*

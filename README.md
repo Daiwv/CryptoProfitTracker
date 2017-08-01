@@ -48,7 +48,7 @@ Created using [creately.com](https://creately.com/)
 
 - Find a Bug where the ledger was imbalanced perhaps due to wrong timeframe between Deposits / Withdrawal / Order?
 
-- Set BTC Current Rate to the BTC-USDT Market.
+- Show BTC and USD worth of money on footer.
 
 - Sort by field.
 

@@ -94,6 +94,8 @@ ipcMain.on('initial_csv_sync', (event, arg) => {
 
                     var newBalancesInfo = portfolioCalculator.transactionsToPortfolio( balances, transactions );
 
+                    console.log( newBalancesInfo );
+
                     var newBalances = newBalancesInfo.val;
 
                      dbSync( newBalances, transactions );

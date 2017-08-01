@@ -119,7 +119,7 @@ describe('DBManager Test Suite', function() {
                     assert.equal( last_tx_id, docs[0].value );
                     tests.keep('tx', true);
                 } else {
-                    assert.fail("last_tx_id meta is not equal to 1");
+                    assert.fail("there is more than 1 last_tx_id record");
                 }
             });
 
@@ -128,13 +128,28 @@ describe('DBManager Test Suite', function() {
                     assert.equal( last_sync, docs[0].value );
                     tests.keep('sync', true);
                 } else {
-                    assert.fail("last_sync meta is not equal to 1");
+                    assert.fail("there is more than 1 last_sync record");
                 }
             });
         });
 
         tests.then((tests) => {
             done();
+        });
+    });
+
+    it('checks if configure method revert last_tx_id back to 1', function(done) {
+        dbm.synchronize( (new Date().getTime()), "abc", () => {
+            dbm.configure( "new_key", "new_secret", () => {
+                dbm.metadataDB.find({'meta': 'last_tx_id'}, function(err, docs) {
+                    if( docs.length == 1 ) {
+                        assert.equal( 0, docs[0].value );
+                        done();
+                    } else {
+                        assert.fail("there is more than 1 last_tx_id record");
+                    }
+                });
+            });
         });
     });
 });
