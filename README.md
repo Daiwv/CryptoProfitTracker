@@ -46,10 +46,12 @@ Created using [creately.com](https://creately.com/)
 
 ## TODO
 
-- Bittrex API only supports 65 last transactions, modify the requirement for needing initial complete transaction (CSV) from Bittrex then do checking whether /account/getbalances matches the current calculation, ask user to re-upload when it's not.
+- Add Market Column because the rate can be different between markets (BTC / ETH)
 
-- Design a database structure to keep the portfolio and the last transaction sync'd. (Currently it's fetching all transactions and recalculating every time)
+- Find a Bug where the ledger was imbalanced perhaps due to wrong timeframe between Deposits / Withdrawal / Order? 
 
-- Set BTC Current Rate to the BTC-USDT Market
+- Set BTC Current Rate to the BTC-USDT Market.
 
 - Sort by field.
+
+- Add Auto-Refresh Every x Minute

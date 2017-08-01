@@ -1,4 +1,4 @@
-const {app, BrowserWindow, dialog, ipcMain} = require('electron');
+const {app, BrowserWindow, ipcMain} = require('electron');
 const path = require('path');
 const await = require('await');
 

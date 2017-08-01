@@ -1,16 +1,16 @@
-const {ipcRenderer} = require('electron');
+const {ipcRenderer, shell} = require('electron');
 const {dialog} = require('electron').remote;
 const await = require('await');
 const moment = require('moment');
 const _ = require('lodash');
 
-var homeHTML, settingHTML;
+var homeHTML, settingHTML, syncHTML;
 var loadingHTML = "<i class=\"fa fa-spinner fa-spin fa-lg fa-fw\"></i>";
 var balances = [], tickers = [];
 var tableEntryCount = 0;
 
 // Use await to only setupPortfolioPage when HTMLs are ready
-var htmls = await('home', 'setting');
+var htmls = await('home', 'setting', 'sync');
 
 $.get("home.html", function(data) {
     homeHTML = data;
@@ -20,6 +20,11 @@ $.get("home.html", function(data) {
 $.get("setting.html", function(data) {
     settingHTML = data;
     htmls.keep( 'setting', true );
+});
+
+$.get("sync.html", function(data) {
+    syncHTML = data;
+    htmls.keep( 'sync', true );
 });
 
 htmls.then(function(htmls) {
@@ -247,7 +252,7 @@ function setupPortfolioPage() {
             updateTicker();
             refreshSyncTime();
         } else if( arg.status == "NEED_SYNC" ) {
-            dialog.showErrorBox("DATA NEED_SYNC", "The Data is not in Sync with Bittrex History, please feed the CSV from Bittrex's Order History.");
+            setupSyncPage();
         }
     });
 
@@ -257,7 +262,25 @@ function setupPortfolioPage() {
         fillTicker( arg );
     });
 
-    // Set the HTML on Main Window,
+    function setupSyncPage() {
+        function initSyncPage() {
+            $("#cpt-mainwindow").html( syncHTML );
+
+            $(".cpt-choose-csv").click(function() {
+                var filePath = dialog.showOpenDialog({properties: ['openFile']});
+                filePath = filePath[0];
+                ipcRenderer.send('initial_csv_sync', filePath);
+                initPortfolio();
+            });
+
+            $(".bittrex-history-url").click(function() {
+                shell.openExternal("https://bittrex.com/History");
+            });
+        }
+
+        initSyncPage();
+    }
+
     initPortfolio();
     ipcRenderer.send('update_portfolio');
 }
@@ -278,16 +301,6 @@ function setupSettingPage() {
             };
 
             ipcRenderer.send('bittrex_auth_add', bittrex_auth);
-        });
-
-        $(".cpt-choose-csv").click(function() {
-            var filePath = dialog.showOpenDialog({properties: ['openFile']});
-            setupPortfolioPage();
-
-            //console.log( filePath[0] );
-            filePath = filePath[0];
-
-            ipcRenderer.send('initial_csv_sync', filePath);
         });
     }
 
