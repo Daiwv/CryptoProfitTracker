@@ -210,13 +210,13 @@ class PortfolioCalculator {
 
                     var balance = _.find( balances, {coin: coinName, market: market} );
 
-                    var b = (balance != undefined) ? balance.amount : 0;
-
-                    if( totalWithdrawn > b ) {
+                    if( balance == undefined ) {
                         console.log("FOUND IMBALANCED LEDGER");
                         foundNotSync = true;
                         break;
                     }
+
+                    var b = balance.amount;
 
                     balance.amount -= totalWithdrawn;
                 } else {
@@ -224,20 +224,22 @@ class PortfolioCalculator {
 
                     var balanceETHMarket = _.find( balances, {coin: coinName, market: "ETH-" + coinName } );
 
-                    var b1 = (balanceBTCMarket != undefined) ? balanceBTCMarket.amount : 0;
-
-                    var b2 = (balanceETHMarket != undefined) ? balanceETHMarket.amount : 0;
-
-                    if( b1 + b2 < totalWithdrawn ) {
+                    if( balanceBTCMarket == undefined && balanceETHMarket == undefined ) {
                         console.log("FOUND IMBALANCED LEDGER, CHECK");
                         foundNotSync = true;
                         break;
                     }
 
+                    var b1 = (balanceBTCMarket != undefined) ? balanceBTCMarket.amount : 0;
+
+                    var b2 = (balanceETHMarket != undefined) ? balanceETHMarket.amount : 0;
+
                     if( b1 > 0 ) {
                         if( (b1 - totalWithdrawn) < 0 ) {
                             var leftover = totalWithdrawn - balanceBTCMarket.amount;
                             balanceBTCMarket.amount = 0;
+
+                            // this could not be the case?
                             balanceETHMarket.amount -= leftover;
                         } else {
                             balanceBTCMarket.amount -= totalWithdrawn;
@@ -286,9 +288,7 @@ class PortfolioCalculator {
                 case "LIMIT_SELL":
                     var dstBalance = _.find(balances, { coin : exchangeDestination, market: market });
 
-                    var b = (dstBalance != undefined) ? dstBalance.amount : 0;
-
-                    if( b < quantity ) {
+                    if( dstBalance == undefined ) {
                         console.log("FOUND IMBALANCED LEDGER");
                         foundNotSync = true;
                         break;
@@ -356,22 +356,22 @@ class PortfolioCalculator {
 
                     var srcBalance = _.find(balances, { coin: exchangeSource, market: market });
 
-                    var b = (srcBalance != undefined) ? srcBalance.amount : 0;
-
-                    if( b < tx_info.Price + tx_info.Commission ) {
-                        srcBalance.amount -= (tx_info.Price + tx_info.Commission);
+                    if( srcBalance == undefined ) {
                         console.log("FOUND IMBALANCED LEDGER");
                         foundNotSync = true;
                         break;
-                    } else {
-                        srcBalance.amount -= (tx_info.Price + tx_info.Commission);
                     }
+
+                    srcBalance.amount -= (tx_info.Price + tx_info.Commission);
 
                     break;
                 }
             }
 
             if( foundNotSync ) {
+                console.log( transaction );
+                console.log( balances );
+
                 retarg = {
                     status: "NEED_SYNC",
                     val: null
@@ -391,7 +391,9 @@ class PortfolioCalculator {
      * @param {requestCallback} fn - return True or False
      */
      isBalanceSynced( apiManager, newBalances, fn ) {
+
          apiManager.getBalances((balances) => {
+
              for( var i = 0; i < balances.length; i++ ) {
                  var balance = balances[i];
 
@@ -418,6 +420,7 @@ class PortfolioCalculator {
                      bal = parseFloat(bal.toFixed(8));
 
                      if( total != bal ) {
+                         console.log( "Imbalanced found: " + coin + " | " + total + " vs " + bal );
                          fn( false );
                          break;
                      }

@@ -98,9 +98,9 @@ ipcMain.on('initial_csv_sync', (event, arg) => {
 
                     var newBalances = newBalancesInfo.val;
 
-                     dbSync( newBalances, transactions );
+                    dbSync( newBalances, transactions );
 
-                     event.sender.send('reply_update_portfolio', {status: "SUCCESS", val: newBalances});
+                    event.sender.send('reply_update_portfolio', {status: "SUCCESS", val: newBalances});
                 } else if( retarg.status == "NOT_SYNCED" ) {
                     event.sender.send('reply_update_portfolio', {status: "NOT_SYNCED", val: []});
                 }
@@ -146,10 +146,10 @@ ipcMain.on('update_portfolio', (event, arg) => {
             });
 
             info.then((info) => {
-                var transactions = info.transactions;
+                var transactions = info.transactions.val;
                 var balances = info.balances;
 
-                var newBalancesInfo = portfolioCalculator.transactionsToPortfolio( balances, transactions.val );
+                var newBalancesInfo = portfolioCalculator.transactionsToPortfolio( balances, transactions );
 
                 var newBalances = newBalancesInfo.val;
 
