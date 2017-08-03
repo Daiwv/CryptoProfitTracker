@@ -186,21 +186,21 @@ ipcMain.on('update_portfolio', (event, arg) => {
 
 ipcMain.on('update_ticker', (event, arg) => {
     arg.forEach((entry) => {
-        if( entry.coin != "BTC" ) {
-            // TEMPORARY HACK, SHOULD STORE MARKET ON PROCESSING TRANSACTIONS
-            var market = entry.market;
+        var market = entry.market;
 
-            apiManager.getTicker( market, function(result) {
-                if( result != undefined ) {
-                    result.Coin = entry.coin;
-                    result.Market = market;
-                    event.sender.send("reply_ticker", result);
-                }
-            });
-        } else {
-            var btcEntry = { Coin : "BTC", Last: 1 };
-            event.sender.send("reply_ticker", btcEntry);
-        }
+        apiManager.getTicker( market, function(result) {
+            if( result != undefined ) {
+                result.Coin = entry.coin;
+                result.Market = market;
+                event.sender.send("reply_ticker", result);
+            } else {
+                result = {};
+                result.Coin = entry.coin;
+                result.Market = market;
+                result.Last = 1;
+                event.sender.send("reply_ticker", result);
+            }
+        });
     });
 });
 

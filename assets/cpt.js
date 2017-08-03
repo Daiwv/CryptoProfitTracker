@@ -66,7 +66,7 @@ function setupPortfolioPage() {
 
             oldBalances.forEach((oldBalance) => {
                 if( _.find(newBalances, oldBalance) == undefined ) {
-                    deletedCoins.push(oldBalance.coin);
+                    deletedCoins.push(oldBalance.coin + oldBalance.market);
                 }
             });
 
@@ -185,7 +185,7 @@ function setupPortfolioPage() {
 
             if( amount > 0 ) {
                 var profit = (curRate - buyRate) / buyRate;
-                var profitDisplay = (isFinite(profit)) ? (profit * 100).toFixed(2) + " %" : "- %";
+                var profitDisplay = (isFinite(profit)) ? (profit * 100).toFixed(2) + " %" : "-";
 
                 if( profit < 0 ) {
                     profitDisplay = "<label class=\"cpt-profit-negative\">" + profitDisplay + "</label>";
@@ -196,7 +196,8 @@ function setupPortfolioPage() {
                 $(".cur-rate-" + indexName).html( curRate.toExponential(3) );
                 $(".profit-" + indexName).html( profitDisplay );
 
-                var conversion = amount * curRate;
+                var conversion = ( indexName != "BTCUSDT-BTC" ) ? amount * curRate : parseFloat(amount);
+
                 $(".btc-conv-" + indexName).html( conversion.toFixed(5) +
                 " (<label class=\"btc-conv-rat-" + indexName + "\">" + loadingHTML + "</label>)" );
 
@@ -216,9 +217,17 @@ function setupPortfolioPage() {
                 var indexName = balance.coin + balance.market;
                 var curRate = $(".cur-rate-" + indexName).html();
                 var amount = $(".amt-" + indexName).html();
-                var total = amount * curRate;
-                conversions[indexName] = total;
-                conversionTotal += total;
+                var total;
+
+                if( indexName == "BTCUSDT-BTC" ) {
+                    total = amount;
+                    conversions[indexName] = amount;
+                } else {
+                    total = amount * curRate;
+                    conversions[indexName] = total;
+                }
+
+                conversionTotal += parseFloat(total);
             }
         });
 

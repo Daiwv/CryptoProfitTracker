@@ -206,7 +206,7 @@ class PortfolioCalculator {
                 var totalWithdrawn = amountWithdrawn + txCost;
 
                 if( coinName == "BTC" || coinName == "ETH" ) {
-                    market = (coinName == "BTC") ? "BTC-USDT" : "BTC-ETH";
+                    market = (coinName == "BTC") ? "USDT-BTC" : "BTC-ETH";
 
                     var balance = _.find( balances, {coin: coinName, market: market} );
 
@@ -253,7 +253,7 @@ class PortfolioCalculator {
 
             case 'DEPOSIT':
                 if( coinName == "BTC" ) {
-                    market = "BTC-USDT";
+                    market = "USDT-BTC";
                 } else {
                     market = "BTC-" + coinName;
                 }
@@ -298,7 +298,7 @@ class PortfolioCalculator {
 
                     switch( exchangeSource ) {
                     case "BTC":
-                        market = "BTC-USDT";
+                        market = "USDT-BTC";
                         break;
 
                     case "ETH":
@@ -346,7 +346,7 @@ class PortfolioCalculator {
 
                     switch( exchangeSource ) {
                         case "BTC":
-                            market = "BTC-USDT";
+                            market = "USDT-BTC";
                             break;
 
                         case "ETH":
