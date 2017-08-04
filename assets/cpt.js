@@ -182,6 +182,8 @@ function setupPortfolioPage() {
         if( balance != undefined ) {
             var buyRate = balance.buy_rate;
             var amount = balance.amount;
+            var market = balance.market;
+            market = market.substring(0, market.indexOf('-'));
 
             if( amount > 0 ) {
                 var profit = (curRate - buyRate) / buyRate;
@@ -198,13 +200,28 @@ function setupPortfolioPage() {
 
                 var conversion = ( indexName != "BTCUSDT-BTC" ) ? amount * curRate : parseFloat(amount);
 
-                $(".btc-conv-" + indexName).html( conversion.toFixed(5) +
-                " (<label class=\"btc-conv-rat-" + indexName + "\">" + loadingHTML + "</label>)" );
+                if( market == "ETH" ) {
+                    // Get the BTC conversion first
+                    ipcRenderer.once('reply_btc_conversion_' + indexName, (event,arg) => {
+                        var curRate = arg.Last;
+                        var conversion = curRate * amount;
+                        setConversion(indexName, conversion);
+                    });
 
-                if( allTickerFilled() ) {
-                    refreshConversion();
+                    ipcRenderer.send('request_btc_conversion', { coin: coinName, indexName: indexName });
+                } else {
+                    setConversion(indexName, conversion);
                 }
             }
+        }
+    }
+
+    function setConversion( indexName, conversion ) {
+        $(".btc-conv-" + indexName).html( conversion.toFixed(5) +
+        " (<label class=\"btc-conv-rat-" + indexName + "\">" + loadingHTML + "</label>)" );
+
+        if( allTickerFilled() ) {
+            refreshConversion();
         }
     }
 

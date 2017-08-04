@@ -211,6 +211,14 @@ ipcMain.on('request_api', (event, arg) => {
     });
 });
 
+ipcMain.on('request_btc_conversion', (event, arg) => {
+    var coin = arg.coin;
+    var indexName = arg.indexName;
+    apiManager.getTicker( "BTC-" + coin, (res) => {
+        event.sender.send('reply_btc_conversion_' + indexName, res);
+    });
+});
+
 /*
  * @param {Array} newBalances - The array of balance (coin) information
  * @param {Array} transactions - The array of list of whole transactions that was

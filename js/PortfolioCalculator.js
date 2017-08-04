@@ -413,7 +413,7 @@ class PortfolioCalculator {
                  var bal = balance.Balance;
                  var coin = balance.Currency;
 
-                 if( bal != 0 ) {
+                 if( bal != 0 && coin != "BCC" ) {
                      var total = 0;
 
                      if( coin == "BTC" || coin == "ETH" ) {
