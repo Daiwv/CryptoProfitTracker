@@ -46,8 +46,6 @@ Created using [creately.com](https://creately.com/)
 
 ## TODO
 
-- Find a Bug where the ledger was imbalanced perhaps due to wrong timeframe between Deposits / Withdrawal / Order?
-
 - When sync'ing with CSV, also fetch order via API in case the fullOrders is not the latest one.
 
 - Show BTC and USD worth of money on footer.

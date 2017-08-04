@@ -14,6 +14,19 @@ class PortfolioCalculator {
     getWithdrawalHistory( apiManager, fn ) {
         apiManager.getWithdrawalHistory((history) => {
             history = helper.mapToDate(history, 'WITHDRAWAL');
+
+            var i = 0;
+            while( i < history.length ) {
+                var his = history[i];
+                var info = his.info;
+
+                if( info.Canceled || !info.Authorized ) {
+                    history.splice( i, 1 );
+                } else {
+                    i++;
+                }
+            }
+
             fn( history );
         });
     }

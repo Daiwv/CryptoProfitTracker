@@ -38,7 +38,7 @@ module.exports = {
 
             case 'WITHDRAWAL':
             timeKey = "Opened";
-            filteredKeys = ['PaymentUuid', 'Currency', 'Amount', 'TxCost'];
+            filteredKeys = ['PaymentUuid', 'Currency', 'Amount', 'TxCost', 'Canceled', 'Authorized'];
             break;
 
             case 'DEPOSIT':

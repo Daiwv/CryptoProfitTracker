@@ -126,7 +126,7 @@ describe('Helper Test Suite', () => {
             });
         }
 
-        var orderHistoryFilteredKeys = ['PaymentUuid', 'Currency', 'Amount', 'TxCost'];
+        var orderHistoryFilteredKeys = ['PaymentUuid', 'Currency', 'Amount', 'TxCost', 'Canceled', 'Authorized'];
 
         for( time in mappedObjs ) {
             order = mappedObjs[time];
