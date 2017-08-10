@@ -232,19 +232,10 @@ function setupPortfolioPage() {
         balances.forEach((balance) => {
             if( balance.amount > 0 ) {
                 var indexName = balance.coin + balance.market;
-                var curRate = $(".cur-rate-" + indexName).html();
-                var amount = $(".amt-" + indexName).html();
-                var total;
-
-                if( indexName == "BTCUSDT-BTC" ) {
-                    total = amount;
-                    conversions[indexName] = amount;
-                } else {
-                    total = amount * curRate;
-                    conversions[indexName] = total;
-                }
-
-                conversionTotal += parseFloat(total);
+                var total = $(".btc-conv-" + indexName).html();
+                total = parseFloat(total.split(" ")[0]);
+                conversions[indexName] = total;
+                conversionTotal += total;
             }
         });
 
